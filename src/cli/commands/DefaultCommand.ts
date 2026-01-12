@@ -1,14 +1,15 @@
-import { input } from '@inquirer/prompts';
+import { editor, input } from '@inquirer/prompts';
 import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { configExists, loadConfig } from '../../core/config.js';
 import { executeCommand } from '../../core/executor.js';
 import { tryResolveShortcut } from '../../core/shortcuts.js';
 import { createProvider } from '../../providers/index.js';
+import { copyToClipboard } from '../../utils/clipboard.js';
 import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
 
-type ConfirmAction = 'yes' | 'no' | 'explain';
+type ConfirmAction = 'yes' | 'no' | 'explain' | 'copy' | 'edit';
 type CommandSource = 'shortcut' | 'ai';
 
 export class DefaultCommand extends Command {
@@ -92,9 +93,11 @@ export class DefaultCommand extends Command {
     console.log('  Commands:');
     console.log(pc.gray('    s --auth            Configure AI provider'));
     console.log(pc.gray('    s --config          View current configuration'));
+    console.log(pc.gray('    s --model           Change AI model'));
     console.log(pc.gray('    s --shortcuts       List all shortcuts'));
     console.log(pc.gray('    s --add-shortcut    Add a new shortcut'));
     console.log(pc.gray('    s --remove-shortcut Remove a shortcut'));
+    console.log(pc.gray('    s --edit-shortcuts  Edit shortcuts in editor'));
     console.log(pc.gray('    s --help            Show help'));
     console.log();
   }
@@ -104,43 +107,73 @@ export class DefaultCommand extends Command {
     source: CommandSource,
     shortcutName?: string,
   ): Promise<number> {
+    let currentCommand = command;
+
     console.log();
 
     if (source === 'shortcut' && shortcutName) {
       console.log(pc.gray(`  [shortcut: ${shortcutName}]`));
     }
 
-    logger.command(command);
+    logger.command(currentCommand);
     console.log();
 
     let action = await this.promptConfirmation();
 
-    // Handle explain mode - only for AI-generated commands
-    while (action === 'explain') {
-      if (source === 'shortcut') {
-        console.log(
-          pc.gray('\n  This command comes from a shortcut, not AI.\n'),
-        );
-      } else {
-        const config = loadConfig();
-        if (config) {
-          const provider = createProvider(config);
-          const explainSpinner = createSpinner(
-            'Getting explanation...',
-          ).start();
-          try {
-            const explanation = await provider.explainCommand(command);
-            explainSpinner.stop();
-            console.log();
-            console.log(pc.bold('  Explanation:'));
-            console.log(pc.gray(`  ${explanation.split('\n').join('\n  ')}`));
-            console.log();
-          } catch {
-            explainSpinner.fail('Failed to get explanation');
+    while (action !== 'yes' && action !== 'no' && action !== 'copy') {
+      if (action === 'explain') {
+        if (source === 'shortcut') {
+          console.log(
+            pc.gray('\n  This command comes from a shortcut, not AI.\n'),
+          );
+        } else {
+          const config = loadConfig();
+          if (config) {
+            const provider = createProvider(config);
+            const explainSpinner = createSpinner(
+              'Getting explanation...',
+            ).start();
+            try {
+              const explanation = await provider.explainCommand(currentCommand);
+              explainSpinner.stop();
+              console.log();
+              console.log(pc.bold('  Explanation:'));
+              console.log(pc.gray(`  ${explanation.split('\n').join('\n  ')}`));
+              console.log();
+            } catch {
+              explainSpinner.fail('Failed to get explanation');
+            }
           }
         }
+      } else if (action === 'edit') {
+        try {
+          const edited = await editor({
+            message: 'Edit command:',
+            default: currentCommand,
+            waitForUserInput: false,
+          });
+          currentCommand = edited.trim();
+          console.log();
+          logger.command(currentCommand);
+          console.log();
+        } catch {
+          logger.error('Edit cancelled');
+        }
       }
+
       action = await this.promptConfirmation();
+    }
+
+    // Handle copy - just copy and exit
+    if (action === 'copy') {
+      const success = await copyToClipboard(currentCommand);
+      if (success) {
+        logger.success('Copied to clipboard!');
+      } else {
+        logger.error('Failed to copy to clipboard');
+      }
+      console.log();
+      return 0;
     }
 
     if (action === 'no') {
@@ -151,7 +184,7 @@ export class DefaultCommand extends Command {
     console.log(pc.gray('\n  Executing...\n'));
     console.log(pc.gray('─'.repeat(50)));
 
-    const result = await executeCommand(command);
+    const result = await executeCommand(currentCommand);
 
     console.log(pc.gray('─'.repeat(50)));
     logger.exitCode(result.exitCode);
@@ -178,7 +211,7 @@ export class DefaultCommand extends Command {
 
   private async promptConfirmation(): Promise<ConfirmAction> {
     const answer = await input({
-      message: 'Execute? (y/n/e for explain)',
+      message: 'Execute? (y/n/e/c/edit)',
       default: 'y',
     });
 
@@ -189,6 +222,12 @@ export class DefaultCommand extends Command {
     }
     if (['e', 'explain'].includes(normalized)) {
       return 'explain';
+    }
+    if (['c', 'copy'].includes(normalized)) {
+      return 'copy';
+    }
+    if (['edit'].includes(normalized)) {
+      return 'edit';
     }
     return 'no';
   }
