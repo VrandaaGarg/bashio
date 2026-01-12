@@ -114,6 +114,8 @@ When a command is generated, you can respond with:
 | `y` or Enter | Execute the command |
 | `n` | Cancel |
 | `e` | Explain what the command does |
+| `c` | Copy to clipboard and exit |
+| `edit` | Edit command before executing |
 
 ## Supported AI Providers
 
@@ -132,6 +134,7 @@ Configuration is stored locally at `~/.shell-agent/config.json`. This file conta
 
 Detailed documentation is available in the `docs/` folder:
 
+- [Commands Reference](docs/commands.md) - All CLI commands
 - [Project Overview](docs/Project.md)
 - [Features & CLI Reference](docs/shell-agent.md)
 - [Database & Auth Design](docs/db&auth.md)
