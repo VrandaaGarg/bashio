@@ -71,33 +71,31 @@ export function getShortcutsFilePath(): string {
 
 /**
  * Parses user input to extract shortcut name and arguments
+ * For single-arg shortcuts, join all remaining parts as one argument
  */
-function parseInput(queryParts: string[]): { name: string; args: string[] } {
+function parseInput(
+  queryParts: string[],
+  expectedArgCount: number,
+): { name: string; args: string[] } {
   if (queryParts.length === 0) {
     return { name: '', args: [] };
   }
 
   const name = queryParts[0];
-  const args: string[] = [];
+  const remainingParts = queryParts.slice(1);
 
-  const remaining = queryParts.slice(1).join(' ');
-  if (!remaining) {
-    return { name, args };
+  if (remainingParts.length === 0) {
+    return { name, args: [] };
   }
 
-  // Parse arguments - handle quoted strings
-  const regex = /(?:"([^"]+)"|'([^']+)'|(\S+))/g;
-  let match = regex.exec(remaining);
-
-  while (match !== null) {
-    const value = match[1] || match[2] || match[3];
-    if (value) {
-      args.push(value);
-    }
-    match = regex.exec(remaining);
+  // If shortcut expects only 1 argument, join all remaining parts as one
+  // This handles: s commit my commit message -> message = "my commit message"
+  if (expectedArgCount === 1) {
+    return { name, args: [remainingParts.join(' ')] };
   }
 
-  return { name, args };
+  // For multi-arg shortcuts, each part is a separate argument
+  return { name, args: remainingParts };
 }
 
 /**
@@ -126,18 +124,20 @@ function fillTemplate(
 export async function tryResolveShortcut(
   queryParts: string[],
 ): Promise<ResolvedShortcut | null> {
-  const { name, args: providedArgs } = parseInput(queryParts);
-
-  if (!name) {
+  if (queryParts.length === 0) {
     return null;
   }
 
-  const shortcut = getShortcut(name);
+  // First check if the first word matches a shortcut
+  const shortcutName = queryParts[0];
+  const shortcut = getShortcut(shortcutName);
+
   if (!shortcut) {
     return null;
   }
 
   const requiredArgs = shortcut.args || [];
+  const { args: providedArgs } = parseInput(queryParts, requiredArgs.length);
   const finalArgs: string[] = [...providedArgs];
 
   // If not enough args provided, prompt for missing ones
@@ -154,7 +154,7 @@ export async function tryResolveShortcut(
   const command = fillTemplate(shortcut.template, requiredArgs, finalArgs);
 
   return {
-    name,
+    name: shortcutName,
     command,
     source: 'shortcut',
   };
