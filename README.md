@@ -11,6 +11,7 @@ $ s find all files larger than 100mb and delete them
 ## Features
 
 - **Natural Language Commands** - Describe what you want, get the shell command
+- **Custom Shortcuts** - Save frequently used commands with placeholders
 - **Multiple AI Providers** - Claude, OpenAI, Ollama (local), OpenRouter
 - **Safe Execution** - Always confirms before running any command
 - **Explain Mode** - Understand what a command does before executing
@@ -49,8 +50,12 @@ s find all png files in current directory
 
 ```bash
 s <natural language query>    # Convert to shell command
+s <shortcut> [args]           # Run a shortcut
 s --auth                      # Configure AI provider
 s --config                    # View current configuration
+s --shortcuts                 # List all shortcuts
+s --add-shortcut              # Add a new shortcut
+s --remove-shortcut <name>    # Remove a shortcut
 s --help                      # Show help
 s --version                   # Show version
 ```
@@ -72,6 +77,33 @@ s show disk usage by folder
 s what is my ip address
 s kill whatever is running on port 3000
 ```
+
+### Shortcuts
+
+Create shortcuts for frequently used commands with placeholders:
+
+```bash
+# Add a shortcut
+s --add-shortcut
+# Interactive prompts for name, template, and arguments
+
+# Or one-liner
+s --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
+
+# Use the shortcut
+s killport 3000
+> [shortcut: killport]
+> Will run: lsof -ti:3000 | xargs kill -9
+> Execute? (y/n)
+
+# List all shortcuts
+s --shortcuts
+
+# Remove a shortcut
+s --remove-shortcut killport
+```
+
+**Shortcut placeholders:** Use `{{name}}` syntax for arguments that get replaced when running.
 
 ### Confirmation Options
 

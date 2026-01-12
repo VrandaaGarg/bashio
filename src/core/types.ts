@@ -52,3 +52,23 @@ export interface CommandResult {
 export interface ExplanationResult {
   explanation: string;
 }
+
+// Shortcuts types
+export const ShortcutDefinition = z.object({
+  template: z.string(),
+  args: z.array(z.string()).default([]),
+  description: z.string().optional(),
+});
+export type ShortcutDefinition = z.infer<typeof ShortcutDefinition>;
+
+export const ShortcutsFile = z.object({
+  version: z.number().default(1),
+  shortcuts: z.record(z.string(), ShortcutDefinition),
+});
+export type ShortcutsFile = z.infer<typeof ShortcutsFile>;
+
+export interface ResolvedShortcut {
+  name: string;
+  command: string;
+  source: 'shortcut';
+}
