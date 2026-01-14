@@ -147,6 +147,9 @@ export class AuthCommand extends Command {
       credentials,
       settings: {
         confirmBeforeExecute: true,
+        historyEnabled: true,
+        historyRetentionDays: 30,
+        historyMaxEntries: 2000,
       },
     };
 

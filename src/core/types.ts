@@ -32,6 +32,9 @@ export type Credentials = z.infer<typeof Credentials>;
 
 export const Settings = z.object({
   confirmBeforeExecute: z.boolean().default(true),
+  historyEnabled: z.boolean().default(true),
+  historyRetentionDays: z.number().default(30),
+  historyMaxEntries: z.number().default(2000),
 });
 export type Settings = z.infer<typeof Settings>;
 
@@ -71,4 +74,51 @@ export interface ResolvedShortcut {
   name: string;
   command: string;
   source: 'shortcut';
+}
+
+// History types
+export const CommandSource = z.enum(['ai', 'shortcut']);
+export type CommandSource = z.infer<typeof CommandSource>;
+
+export const HistoryEntry = z.object({
+  id: z.number(),
+  query: z.string(),
+  command: z.string(),
+  source: CommandSource,
+  workingDirectory: z.string(),
+  executed: z.number(),
+  exitCode: z.number().nullable(),
+  createdAt: z.string(),
+});
+export type HistoryEntry = z.infer<typeof HistoryEntry>;
+
+export const QueryStats = z.object({
+  id: z.number(),
+  query: z.string(),
+  command: z.string(),
+  source: CommandSource,
+  useCount: z.number(),
+  successCount: z.number(),
+  suggested: z.number(),
+  firstUsed: z.string(),
+  lastUsed: z.string(),
+});
+export type QueryStats = z.infer<typeof QueryStats>;
+
+export interface HistoryStats {
+  totalCommands: number;
+  todayCommands: number;
+  thisWeekCommands: number;
+  totalExecuted: number;
+  executionRate: number;
+  aiCount: number;
+  shortcutCount: number;
+  topQueries: Array<{ query: string; useCount: number; source: string }>;
+}
+
+export interface ShortcutSuggestion {
+  query: string;
+  command: string;
+  useCount: number;
+  suggestedName: string;
 }

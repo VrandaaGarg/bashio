@@ -3,6 +3,7 @@ import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { configExists, loadConfig } from '../../core/config.js';
 import { executeCommand } from '../../core/executor.js';
+import { markExecuted, recordCommand } from '../../core/history.js';
 import { tryResolveShortcut } from '../../core/shortcuts.js';
 import { createProvider } from '../../providers/index.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
@@ -11,6 +12,13 @@ import { createSpinner } from '../../utils/spinner.js';
 
 type ConfirmAction = 'yes' | 'no' | 'explain' | 'copy' | 'edit';
 type CommandSource = 'shortcut' | 'ai';
+
+interface ExecutionContext {
+  queryText: string;
+  historyId: number | null;
+  historyEnabled: boolean;
+  shortcutName?: string;
+}
 
 export class DefaultCommand extends Command {
   static paths = [Command.Default];
@@ -32,15 +40,30 @@ export class DefaultCommand extends Command {
       return 0;
     }
 
+    // Load config for history settings
+    const config = loadConfig();
+    const historyEnabled = config?.settings?.historyEnabled !== false;
+
     // Step 1: Check if it's a shortcut
     const shortcut = await tryResolveShortcut(this.query);
 
     if (shortcut) {
-      return this.executeWithConfirmation(
-        shortcut.command,
-        'shortcut',
-        shortcut.name,
-      );
+      let historyId: number | null = null;
+
+      if (historyEnabled) {
+        historyId = recordCommand({
+          query: this.query.join(' '),
+          command: shortcut.command,
+          source: 'shortcut',
+        });
+      }
+
+      return this.executeWithConfirmation(shortcut.command, 'shortcut', {
+        queryText: this.query.join(' '),
+        historyId,
+        historyEnabled,
+        shortcutName: shortcut.name,
+      });
     }
 
     // Step 2: Not a shortcut, use AI provider
@@ -50,7 +73,6 @@ export class DefaultCommand extends Command {
       return 1;
     }
 
-    const config = loadConfig();
     if (!config) {
       logger.error('Failed to load configuration.');
       console.log(pc.gray("Run 's --auth' to reconfigure.\n"));
@@ -74,7 +96,21 @@ export class DefaultCommand extends Command {
 
     generatedCommand = this.cleanCommand(generatedCommand);
 
-    return this.executeWithConfirmation(generatedCommand, 'ai');
+    // Record history for AI command
+    let historyId: number | null = null;
+    if (historyEnabled) {
+      historyId = recordCommand({
+        query: queryText,
+        command: generatedCommand,
+        source: 'ai',
+      });
+    }
+
+    return this.executeWithConfirmation(generatedCommand, 'ai', {
+      queryText,
+      historyId,
+      historyEnabled,
+    });
   }
 
   private showHelp(): void {
@@ -91,28 +127,37 @@ export class DefaultCommand extends Command {
     console.log(pc.gray('    s killport 3000') + pc.cyan('  (shortcut)'));
     console.log();
     console.log('  Commands:');
-    console.log(pc.gray('    s --auth            Configure AI provider'));
-    console.log(pc.gray('    s --config          View current configuration'));
-    console.log(pc.gray('    s --model           Change AI model'));
-    console.log(pc.gray('    s --shortcuts       List all shortcuts'));
-    console.log(pc.gray('    s --add-shortcut    Add a new shortcut'));
-    console.log(pc.gray('    s --remove-shortcut Remove a shortcut'));
-    console.log(pc.gray('    s --edit-shortcuts  Edit shortcuts in editor'));
-    console.log(pc.gray('    s --help            Show help'));
+    console.log(pc.gray('    s --auth              Configure AI provider'));
+    console.log(
+      pc.gray('    s --config            View current configuration'),
+    );
+    console.log(pc.gray('    s --model             Change AI model'));
+    console.log(pc.gray('    s --shortcuts         List all shortcuts'));
+    console.log(pc.gray('    s --add-shortcut      Add a new shortcut'));
+    console.log(pc.gray('    s --remove-shortcut   Remove a shortcut'));
+    console.log(pc.gray('    s --edit-shortcuts    Edit shortcuts in editor'));
+    console.log();
+    console.log('  History & Stats:');
+    console.log(pc.gray('    s --history           View command history'));
+    console.log(pc.gray('    s --stats             View usage statistics'));
+    console.log(pc.gray('    s --clear-history     Clear command history'));
+    console.log(pc.gray('    s --suggest-shortcuts Suggest new shortcuts'));
+    console.log();
+    console.log(pc.gray('    s --help              Show help'));
     console.log();
   }
 
   private async executeWithConfirmation(
     command: string,
     source: CommandSource,
-    shortcutName?: string,
+    context: ExecutionContext,
   ): Promise<number> {
     let currentCommand = command;
 
     console.log();
 
-    if (source === 'shortcut' && shortcutName) {
-      console.log(pc.gray(`  [shortcut: ${shortcutName}]`));
+    if (source === 'shortcut' && context.shortcutName) {
+      console.log(pc.gray(`  [shortcut: ${context.shortcutName}]`));
     }
 
     logger.command(currentCommand);
@@ -127,9 +172,9 @@ export class DefaultCommand extends Command {
             pc.gray('\n  This command comes from a shortcut, not AI.\n'),
           );
         } else {
-          const config = loadConfig();
-          if (config) {
-            const provider = createProvider(config);
+          const explainConfig = loadConfig();
+          if (explainConfig) {
+            const provider = createProvider(explainConfig);
             const explainSpinner = createSpinner(
               'Getting explanation...',
             ).start();
@@ -189,6 +234,11 @@ export class DefaultCommand extends Command {
     console.log(pc.gray('─'.repeat(50)));
     logger.exitCode(result.exitCode);
     console.log();
+
+    // Update history with execution result
+    if (context.historyEnabled && context.historyId !== null) {
+      markExecuted(context.historyId, result.exitCode);
+    }
 
     return result.exitCode;
   }
