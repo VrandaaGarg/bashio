@@ -28,6 +28,18 @@ export class ConfigCommand extends Command {
     console.log(`  Provider:    ${pc.cyan(config.provider)}`);
     console.log(`  Model:       ${pc.cyan(config.model)}`);
     console.log(`  Auth:        ${pc.green('Configured')}`);
+
+    // Settings section
+    const settings = config.settings;
+    console.log();
+    console.log(pc.bold('  Settings'));
+    console.log(
+      `  History:              ${settings?.historyEnabled !== false ? pc.green('enabled') : pc.gray('disabled')}`,
+    );
+    console.log(
+      `  Auto-confirm shortcuts: ${settings?.autoConfirmShortcuts ? pc.green('enabled') : pc.gray('disabled')}`,
+    );
+
     console.log();
     console.log(pc.gray(`  Config file: ${getConfigPath()}`));
     console.log();

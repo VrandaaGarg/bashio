@@ -60,12 +60,23 @@ export class DefaultCommand extends Command {
         });
       }
 
-      return this.executeWithConfirmation(shortcut.command, 'shortcut', {
+      const context: ExecutionContext = {
         queryText: this.query.join(' '),
         historyId,
         historyEnabled,
         shortcutName: shortcut.name,
-      });
+      };
+
+      // Check if auto-confirm shortcuts is enabled
+      if (config?.settings?.autoConfirmShortcuts) {
+        return this.executeShortcutAutoConfirm(shortcut.command, context);
+      }
+
+      return this.executeWithConfirmation(
+        shortcut.command,
+        'shortcut',
+        context,
+      );
     }
 
     // Step 2: Not a shortcut, use AI provider
@@ -244,6 +255,49 @@ export class DefaultCommand extends Command {
     console.log(pc.gray('─'.repeat(50)));
 
     const result = await executeCommand(currentCommand);
+
+    console.log(pc.gray('─'.repeat(50)));
+    logger.exitCode(result.exitCode);
+    console.log();
+
+    // Update history with execution result
+    if (context.historyEnabled && context.historyId !== null) {
+      markExecuted(context.historyId, result.exitCode);
+    }
+
+    return result.exitCode;
+  }
+
+  private async executeShortcutAutoConfirm(
+    command: string,
+    context: ExecutionContext,
+  ): Promise<number> {
+    console.log();
+
+    if (context.shortcutName) {
+      console.log(pc.gray(`  [shortcut: ${context.shortcutName}]`));
+    }
+
+    logger.command(command);
+    console.log();
+
+    // Still check for dangerous commands even with auto-confirm
+    const danger = detectDangerousShellCommand(command);
+    if (danger) {
+      const confirmed = await this.promptDangerConfirmation(
+        command,
+        danger.reasons,
+      );
+      if (!confirmed) {
+        logger.info('Cancelled.');
+        return 0;
+      }
+    }
+
+    console.log(pc.gray('  Executing...\n'));
+    console.log(pc.gray('─'.repeat(50)));
+
+    const result = await executeCommand(command);
 
     console.log(pc.gray('─'.repeat(50)));
     logger.exitCode(result.exitCode);

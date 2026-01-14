@@ -35,6 +35,7 @@ export const Settings = z.object({
   historyEnabled: z.boolean().default(true),
   historyRetentionDays: z.number().default(30),
   historyMaxEntries: z.number().default(2000),
+  autoConfirmShortcuts: z.boolean().default(false),
 });
 export type Settings = z.infer<typeof Settings>;
 

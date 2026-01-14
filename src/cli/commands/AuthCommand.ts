@@ -150,6 +150,7 @@ export class AuthCommand extends Command {
         historyEnabled: true,
         historyRetentionDays: 30,
         historyMaxEntries: 2000,
+        autoConfirmShortcuts: false,
       },
     };
 

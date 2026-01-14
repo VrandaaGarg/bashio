@@ -272,6 +272,27 @@ All configuration is stored in `~/.shell-agent/`:
 | `shortcuts.json` | User-defined shortcuts |
 | `history.db` | Command history and usage stats (SQLite) |
 
+### Settings in config.json
+
+You can edit `~/.shell-agent/config.json` to customize these settings:
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `historyEnabled` | `true` | Track command history |
+| `historyRetentionDays` | `30` | Days to keep history |
+| `historyMaxEntries` | `2000` | Maximum history entries |
+| `autoConfirmShortcuts` | `false` | Auto-execute shortcuts without confirmation (dangerous commands still prompt) |
+
+**Example:** To enable auto-confirm for shortcuts, edit your config:
+
+```json
+{
+  "settings": {
+    "autoConfirmShortcuts": true
+  }
+}
+```
+
 ---
 
 ## Example Shortcuts
