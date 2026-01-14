@@ -6,6 +6,7 @@ import {
   clearHistoryOlderThan,
   getHistoryCount,
 } from '../../core/history.js';
+import { renderDangerBanner } from '../../utils/danger-ui.js';
 import { logger } from '../../utils/logger.js';
 
 export class ClearHistoryCommand extends Command {
@@ -49,13 +50,15 @@ export class ClearHistoryCommand extends Command {
 
     if (this.all) {
       console.log();
-      console.log(
-        pc.yellow(`  ⚠️  This will delete ${currentCount} history entries.`),
-      );
+      for (const line of renderDangerBanner(
+        `This will permanently delete ${currentCount} history entries.`,
+      )) {
+        console.log(line);
+      }
       console.log();
 
       const confirmed = await confirm({
-        message: 'Are you sure?',
+        message: 'Proceed with clearing all history?',
         default: false,
       });
 
@@ -75,6 +78,24 @@ export class ClearHistoryCommand extends Command {
       if (Number.isNaN(days) || days < 1) {
         logger.error('Invalid number of days.');
         return 1;
+      }
+
+      console.log();
+      for (const line of renderDangerBanner(
+        `This will permanently delete entries older than ${days} days.`,
+      )) {
+        console.log(line);
+      }
+      console.log();
+
+      const confirmed = await confirm({
+        message: `Proceed with clearing entries older than ${days} days?`,
+        default: false,
+      });
+
+      if (!confirmed) {
+        logger.info('Cancelled.');
+        return 0;
       }
 
       const deleted = clearHistoryOlderThan(days);

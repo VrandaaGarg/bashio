@@ -2,6 +2,7 @@ import { confirm } from '@inquirer/prompts';
 import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { getShortcut, removeShortcut } from '../../core/shortcuts.js';
+import { renderDangerBanner } from '../../utils/danger-ui.js';
 import { logger } from '../../utils/logger.js';
 
 export class RemoveShortcutCommand extends Command {
@@ -29,8 +30,15 @@ export class RemoveShortcutCommand extends Command {
     }
     console.log();
 
+    for (const line of renderDangerBanner(
+      `This will permanently remove shortcut "${this.name}".`,
+    )) {
+      console.log(line);
+    }
+    console.log();
+
     const confirmed = await confirm({
-      message: `Remove shortcut "${this.name}"?`,
+      message: `Proceed with removing "${this.name}"?`,
       default: false,
     });
 

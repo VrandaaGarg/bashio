@@ -1,4 +1,4 @@
-import { editor, input } from '@inquirer/prompts';
+import { confirm, editor, input } from '@inquirer/prompts';
 import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { configExists, loadConfig } from '../../core/config.js';
@@ -7,6 +7,8 @@ import { markExecuted, recordCommand } from '../../core/history.js';
 import { tryResolveShortcut } from '../../core/shortcuts.js';
 import { createProvider } from '../../providers/index.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { detectDangerousShellCommand } from '../../utils/danger.js';
+import { renderDangerBanner } from '../../utils/danger-ui.js';
 import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
 
@@ -226,6 +228,18 @@ export class DefaultCommand extends Command {
       return 0;
     }
 
+    const danger = detectDangerousShellCommand(currentCommand);
+    if (danger) {
+      const confirmed = await this.promptDangerConfirmation(
+        currentCommand,
+        danger.reasons,
+      );
+      if (!confirmed) {
+        logger.info('Cancelled.');
+        return 0;
+      }
+    }
+
     console.log(pc.gray('\n  Executing...\n'));
     console.log(pc.gray('─'.repeat(50)));
 
@@ -280,5 +294,30 @@ export class DefaultCommand extends Command {
       return 'edit';
     }
     return 'no';
+  }
+
+  private async promptDangerConfirmation(
+    command: string,
+    reasons: string[],
+  ): Promise<boolean> {
+    for (const line of renderDangerBanner(
+      'This command may cause irreversible changes.',
+    )) {
+      console.log(line);
+    }
+    console.log();
+    console.log(pc.yellow('  Reasons:'));
+    for (const reason of reasons) {
+      console.log(pc.yellow(`  - ${reason}`));
+    }
+    console.log();
+    console.log(pc.gray('  Command:'));
+    console.log(pc.cyan(`  ${command}`));
+    console.log();
+
+    return confirm({
+      message: 'Proceed with this command?',
+      default: false,
+    });
   }
 }
