@@ -148,6 +148,100 @@ Opens `~/.shell-agent/shortcuts.json` in `$EDITOR` (or nano/notepad if not set).
 
 ---
 
+### `s --history`
+
+View command history in a table format.
+
+```bash
+s --history                    # View recent 20 entries
+s --history --limit 50         # View more entries
+s --history -l 10              # Short form
+s --history --search git       # Search history
+s --history -s commit          # Short form search
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--limit, -l` | Number of entries to show (default: 20) |
+| `--search, -s` | Search term to filter history |
+
+**Output columns:**
+- `#` - Entry number
+- `Command` - The shell command
+- `Query` - Original natural language query (if AI-generated)
+- `Source` - `ai` or `shortcut`
+- `Status` - `✓ success`, `✗ exit:N`, or `○ skipped`
+- `Time` - How long ago
+
+---
+
+### `s --stats`
+
+View usage statistics with overview, source breakdown, and most used commands.
+
+```bash
+s --stats
+```
+
+**Shows three tables:**
+1. **Overview** - Total commands, execution rate, today/this week counts
+2. **Source Breakdown** - AI vs shortcuts usage percentages
+3. **Most Used Commands** - Top commands ranked by usage
+
+---
+
+### `s --clear-history`
+
+Clear command history.
+
+```bash
+s --clear-history --all           # Clear all history (with confirmation)
+s --clear-history -a              # Short form
+s --clear-history --older-than 7  # Clear entries older than 7 days
+s --clear-history -o 30           # Short form
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--all, -a` | Clear all history entries |
+| `--older-than, -o` | Clear entries older than N days |
+
+---
+
+### `s --suggest-shortcuts`
+
+Get personalized shortcut suggestions based on your frequently used commands.
+
+```bash
+s --suggest-shortcuts              # Default threshold: 3+ uses
+s --suggest-shortcuts --threshold 5  # Higher threshold
+s --suggest-shortcuts -t 2         # Lower threshold
+```
+
+**Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--threshold, -t` | Minimum use count to suggest (default: 3) |
+
+**Interactive prompts:**
+
+| Input | Action |
+|-------|--------|
+| `y` | Create the shortcut |
+| `n` | Skip this suggestion |
+| `e` | Exit suggestions |
+
+When creating a shortcut, you can:
+- Edit the suggested name
+- Parameterize numbers (e.g., port 3000 → `{{arg1}}`)
+
+---
+
 ### `s --help`
 
 Show help with all available commands.
@@ -176,6 +270,7 @@ All configuration is stored in `~/.shell-agent/`:
 |------|---------|
 | `config.json` | AI provider settings and credentials |
 | `shortcuts.json` | User-defined shortcuts |
+| `history.db` | Command history and usage stats (SQLite) |
 
 ---
 
@@ -219,5 +314,9 @@ All configuration is stored in `~/.shell-agent/`:
 | `s --add-shortcut` | Add shortcut |
 | `s --remove-shortcut <name>` | Remove shortcut |
 | `s --edit-shortcuts` | Edit shortcuts file |
+| `s --history` | View command history |
+| `s --stats` | View usage statistics |
+| `s --clear-history` | Clear history |
+| `s --suggest-shortcuts` | Get shortcut suggestions |
 | `s --help` | Show help |
 | `s --version` | Show version |

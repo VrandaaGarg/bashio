@@ -1,6 +1,7 @@
 import { Command } from 'clipanion';
 import pc from 'picocolors';
 import { listShortcuts } from '../../core/shortcuts.js';
+import { renderTable } from '../../utils/table.js';
 
 export class ShortcutsCommand extends Command {
   static paths = [['shortcuts'], ['--shortcuts']];
@@ -20,49 +21,35 @@ export class ShortcutsCommand extends Command {
       return 0;
     }
 
-    console.log(pc.bold('\n  YOUR SHORTCUTS\n'));
-
-    // Calculate column widths
-    const maxNameLen = Math.max(8, ...names.map((n) => n.length));
-    const maxTemplateLen = Math.max(
-      16,
-      ...names.map((n) => shortcuts[n].template.length),
-    );
-    const maxArgsLen = Math.max(
-      9,
-      ...names.map((n) => (shortcuts[n].args?.join(', ') || '-').length),
-    );
-
-    // Header
-    const header = `  ${pc.bold('Name'.padEnd(maxNameLen))}  ${pc.bold('Command Template'.padEnd(maxTemplateLen))}  ${pc.bold('Arguments')}`;
-    console.log(header);
-    console.log(
-      pc.gray(
-        `  ${'─'.repeat(maxNameLen)}  ${'─'.repeat(maxTemplateLen)}  ${'─'.repeat(maxArgsLen)}`,
-      ),
-    );
-
-    // Rows
-    for (const name of names) {
+    const data = names.map((name) => {
       const shortcut = shortcuts[name];
-      const argsStr = shortcut.args?.length ? shortcut.args.join(', ') : '-';
-      const templateDisplay =
-        shortcut.template.length > 50
-          ? `${shortcut.template.slice(0, 47)}...`
-          : shortcut.template;
+      return {
+        name,
+        template: shortcut.template,
+        args: shortcut.args?.length ? shortcut.args.join(', ') : '-',
+      };
+    });
 
-      console.log(
-        `  ${pc.cyan(name.padEnd(maxNameLen))}  ${pc.white(templateDisplay.padEnd(maxTemplateLen))}  ${pc.gray(argsStr)}`,
-      );
-    }
+    renderTable({
+      title: 'Your Shortcuts',
+      columns: [
+        { header: 'Name', key: 'name', width: 15, color: pc.cyan },
+        {
+          header: 'Command Template',
+          key: 'template',
+          width: 45,
+          color: pc.white,
+        },
+        { header: 'Arguments', key: 'args', width: 15, color: pc.gray },
+      ],
+      data,
+    });
 
-    console.log();
     console.log(
-      pc.gray(
-        `  Total: ${names.length} shortcut${names.length === 1 ? '' : 's'}`,
+      pc.dim(
+        `\n  Total: ${names.length} shortcut${names.length === 1 ? '' : 's'}\n`,
       ),
     );
-    console.log();
 
     return 0;
   }
