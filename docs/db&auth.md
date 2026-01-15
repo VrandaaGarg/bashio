@@ -1,6 +1,8 @@
+# Database & Authentication Design
+
 ## Overview
 
-Shell Agent is a **fully local CLI tool**. There is no cloud, no server, no user accounts on our side. Everything lives on the user's machine.
+Shell Agent is a **fully local CLI tool**. There is no cloud, no server, no user accounts. Everything lives on the user's machine.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -13,7 +15,6 @@ Shell Agent is a **fully local CLI tool**. There is no cloud, no server, no user
 │                                                              │
 │   Nothing leaves the machine except AI API calls             │
 └─────────────────────────────────────────────────────────────┘
-
 ```
 
 ---
@@ -26,12 +27,12 @@ There is **no Shell Agent account**. The only "auth" is connecting to an AI prov
 
 ### Supported Providers
 
-| Provider | Auth Method | Cost to User |
-| --- | --- | --- |
-| Claude | Session token from claude.ai | Free (uses Pro subscription) |
-| ChatGPT | Session token from chat.openai.com | Free (uses Plus subscription) |
-| Ollama | None (runs locally) | Free (local models) |
-| OpenRouter | API key | Pay per use |
+| Provider | Auth Method | Cost |
+|----------|-------------|------|
+| Claude (Anthropic) | API Key | Paid |
+| OpenAI | API Key | Paid |
+| Ollama | None (local) | Free |
+| OpenRouter | API Key | Pay per use |
 
 ### Auth Flow
 
@@ -41,45 +42,51 @@ User runs: s --auth
                 ▼
 ┌─────────────────────────────────────┐
 │  Select provider:                   │
-│  > Claude                           │
-│    ChatGPT                          │
-│    Ollama                           │
+│  > Claude (Anthropic)               │
+│    ChatGPT (OpenAI)                 │
+│    Ollama (Local)                   │
 │    OpenRouter                       │
 └─────────────────────────────────────┘
                 │
                 ▼ (User selects Claude)
 ┌─────────────────────────────────────┐
-│  Get session token:                 │
-│  1. Open claude.ai                  │
-│  2. DevTools → Cookies              │
-│  3. Copy "sessionKey" value         │
-│  4. Paste here: __________          │
+│  Enter API key:                     │
+│  > ****************************     │
 └─────────────────────────────────────┘
                 │
                 ▼
 ┌─────────────────────────────────────┐
-│  Validate token with test API call  │
-│  If valid → Save to config.json     │
+│  Validate key with test API call    │
+│  If valid → Select model            │
 │  If invalid → Show error, retry     │
 └─────────────────────────────────────┘
                 │
                 ▼
+┌─────────────────────────────────────┐
+│  Select model:                      │
+│  > Claude Sonnet 4 (recommended)    │
+│    Claude 3.5 Sonnet                │
+│    Claude 3.5 Haiku (fast)          │
+└─────────────────────────────────────┘
+                │
+                ▼
+        Save to config.json
+                │
+                ▼
         ✓ Ready to use!
-
 ```
 
 ### Where Credentials Are Stored
 
 ```
 ~/.shell-agent/config.json
-
 ```
 
 Credentials never leave the user's machine. We never see them. We have no server.
 
-### Token Expiry
+### Invalid Credentials Handling
 
-Session tokens expire. When a token fails:
+When an API call fails due to invalid credentials:
 
 ```
 User runs: s find large files
@@ -89,10 +96,11 @@ User runs: s find large files
                 │
                 ▼
 ┌─────────────────────────────────────┐
-│  ⚠️ Session expired.                │
-│  Run 's --auth' to re-authenticate. │
+│  ✗ Failed to generate command       │
+│  Claude API error: 401 - ...        │
+│                                     │
+│  Run 's --auth' to reconfigure.     │
 └─────────────────────────────────────┘
-
 ```
 
 ---
@@ -102,7 +110,7 @@ User runs: s find large files
 ### Why Two Storage Types?
 
 | Data | Storage | Reason |
-| --- | --- | --- |
+|------|---------|--------|
 | Config | JSON file | User might edit manually |
 | Shortcuts | JSON file | User might edit, share, or version control |
 | History | SQLite | Needs fast queries, indexing, aggregations |
@@ -115,8 +123,11 @@ User runs: s find large files
 ├── config.json           JSON     ~1 KB      Settings + credentials
 ├── shortcuts.json        JSON     ~5 KB      Custom shortcuts
 └── history.db            SQLite   ~500 KB    Command history + stats
-
 ```
+
+### File Permissions
+
+All files created with `0o600` permissions (owner read/write only) for security.
 
 ---
 
@@ -129,9 +140,9 @@ Stores settings and AI provider credentials.
 **Structure:**
 
 | Field | Type | Required | Description |
-| --- | --- | --- | --- |
+|-------|------|----------|-------------|
 | version | integer | yes | Schema version for migrations |
-| provider | string | yes | "claude" / "chatgpt" / "ollama" / "openrouter" |
+| provider | string | yes | "claude" / "openai" / "ollama" / "openrouter" |
 | model | string | yes | Model identifier |
 | credentials | object | yes | Provider-specific auth data |
 | settings | object | no | User preferences |
@@ -139,20 +150,21 @@ Stores settings and AI provider credentials.
 **Credentials by Provider:**
 
 | Provider | Credentials Object |
-| --- | --- |
-| Claude | `{ "type": "session", "sessionToken": "sk-ant-..." }` |
-| ChatGPT | `{ "type": "session", "accessToken": "..." }` |
+|----------|-------------------|
+| Claude | `{ "type": "api_key", "apiKey": "sk-ant-..." }` |
+| OpenAI | `{ "type": "api_key", "apiKey": "sk-..." }` |
 | Ollama | `{ "type": "local", "host": "http://localhost:11434" }` |
 | OpenRouter | `{ "type": "api_key", "apiKey": "sk-or-..." }` |
 
 **Settings Object:**
 
 | Field | Type | Default | Description |
-| --- | --- | --- | --- |
+|-------|------|---------|-------------|
 | confirmBeforeExecute | boolean | true | Ask before running commands |
 | historyEnabled | boolean | true | Track command history |
 | historyRetentionDays | integer | 30 | Days to keep history |
 | historyMaxEntries | integer | 2000 | Max entries to keep |
+| autoConfirmShortcuts | boolean | false | Skip confirmation for shortcuts |
 
 **Example:**
 
@@ -160,19 +172,19 @@ Stores settings and AI provider credentials.
 {
   "version": 1,
   "provider": "claude",
-  "model": "claude-sonnet-4",
+  "model": "claude-sonnet-4-20250514",
   "credentials": {
-    "type": "session",
-    "sessionToken": "sk-ant-sid01-xxxxxxxxxxxxx"
+    "type": "api_key",
+    "apiKey": "sk-ant-api03-xxxxxxxxxxxxx"
   },
   "settings": {
     "confirmBeforeExecute": true,
     "historyEnabled": true,
     "historyRetentionDays": 30,
-    "historyMaxEntries": 2000
+    "historyMaxEntries": 2000,
+    "autoConfirmShortcuts": false
   }
 }
-
 ```
 
 ---
@@ -184,16 +196,16 @@ Stores user-defined command shortcuts.
 **Structure:**
 
 | Field | Type | Required | Description |
-| --- | --- | --- | --- |
+|-------|------|----------|-------------|
 | version | integer | yes | Schema version |
 | shortcuts | object | yes | Map of name → shortcut definition |
 
 **Shortcut Definition:**
 
 | Field | Type | Required | Description |
-| --- | --- | --- | --- |
+|-------|------|----------|-------------|
 | template | string | yes | Command with `{{arg}}` placeholders |
-| args | array of strings | no | Argument names in order |
+| args | array | no | Argument names in order |
 | description | string | no | Human-readable description |
 
 **Example:**
@@ -207,11 +219,6 @@ Stores user-defined command shortcuts.
       "args": ["message"],
       "description": "Stage all and commit"
     },
-    "kakiyo": {
-      "template": "cd ~/projects/kakiyo && code .",
-      "args": [],
-      "description": "Open Kakiyo project"
-    },
     "killport": {
       "template": "lsof -ti:{{port}} | xargs kill -9",
       "args": ["port"],
@@ -221,26 +228,18 @@ Stores user-defined command shortcuts.
       "template": "cd ~/projects/{{project}} && npm run dev",
       "args": ["project"],
       "description": "Start dev server"
-    },
-    "logs": {
-      "template": "tail -f ~/projects/{{project}}/logs/{{env}}.log",
-      "args": ["project", "env"],
-      "description": "Tail project logs"
     }
   }
 }
-
 ```
 
 **Shortcut Usage Examples:**
 
 | User Types | Shortcut Found | Args Extracted | Final Command |
-| --- | --- | --- | --- |
-| `s kakiyo` | kakiyo | (none) | `cd ~/projects/kakiyo && code .` |
+|------------|---------------|----------------|---------------|
 | `s commit "fixed bug"` | commit | message="fixed bug" | `git add . && git commit -m "fixed bug"` |
-| `s killport 3000` | killport | port=3000 | `lsof -ti:3000 | xargs kill -9` |
-| `s dev kakiyo` | dev | project=kakiyo | `cd ~/projects/kakiyo && npm run dev` |
-| `s logs kakiyo prod` | logs | project=kakiyo, env=prod | `tail -f ~/projects/kakiyo/logs/prod.log` |
+| `s killport 3000` | killport | port=3000 | `lsof -ti:3000 \| xargs kill -9` |
+| `s dev myapp` | dev | project=myapp | `cd ~/projects/myapp && npm run dev` |
 
 ---
 
@@ -249,14 +248,22 @@ Stores user-defined command shortcuts.
 ### Why SQLite?
 
 | Need | JSON | SQLite |
-| --- | --- | --- |
-| Fast queries on 1000+ rows | ❌ Slow | ✅ Fast |
-| Search with LIKE/patterns | ❌ Manual | ✅ Built-in |
-| Aggregations (COUNT, GROUP BY) | ❌ Manual | ✅ Built-in |
-| Indexing | ❌ None | ✅ Supported |
-| Single file, no server | ✅ Yes | ✅ Yes |
+|------|------|--------|
+| Fast queries on 1000+ rows | Slow | Fast |
+| Search with LIKE/patterns | Manual | Built-in |
+| Aggregations (COUNT, GROUP BY) | Manual | Built-in |
+| Indexing | None | Supported |
+| Single file, no server | Yes | Yes |
 
 SQLite gives us database power with file simplicity.
+
+### Database Location
+
+```
+~/.shell-agent/history.db
+```
+
+File permissions: `0o600` (owner read/write only)
 
 ---
 
@@ -266,89 +273,133 @@ Stores recent command history. **Auto-cleaned** based on retention settings.
 
 ### Schema
 
-| Column | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| id | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique identifier |
-| query | TEXT | NOT NULL | User's natural language input |
-| command | TEXT | NOT NULL | Generated shell command |
-| source | TEXT | NOT NULL | "ai" or "shortcut" |
-| executed | INTEGER | DEFAULT 0 | 0=not run, 1=user executed it |
-| exit_code | INTEGER | NULLABLE | Command exit code (0=success) |
-| created_at | TEXT | DEFAULT current timestamp | When entry was created |
+```sql
+CREATE TABLE IF NOT EXISTS history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  query TEXT NOT NULL,
+  command TEXT NOT NULL,
+  source TEXT NOT NULL CHECK(source IN ('ai', 'shortcut')),
+  working_directory TEXT NOT NULL,
+  executed INTEGER DEFAULT 0,
+  exit_code INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INTEGER | Primary key |
+| query | TEXT | User's natural language input |
+| command | TEXT | Generated shell command |
+| source | TEXT | "ai" or "shortcut" |
+| working_directory | TEXT | CWD when command was generated |
+| executed | INTEGER | 0=not run, 1=user executed it |
+| exit_code | INTEGER | Command exit code (NULL if not executed) |
+| created_at | TEXT | ISO timestamp |
 
 ### Indexes
 
-| Index Name | Column(s) | Purpose |
-| --- | --- | --- |
-| idx_history_created | created_at | Fast cleanup, sorting by date |
-| idx_history_query | query | Fast text search |
+```sql
+CREATE INDEX IF NOT EXISTS idx_history_created ON history(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_history_query ON history(query);
+CREATE INDEX IF NOT EXISTS idx_history_working_dir ON history(working_directory);
+```
 
 ### Retention Policy
 
 - Default: Delete entries older than 30 days
-- Also cap at max 2000 entries
-- Cleanup runs on app start
+- Cap at max 2000 entries
+- Cleanup runs on app start (once per day)
 
 ### Example Data
 
 | id | query | command | source | executed | exit_code | created_at |
-| --- | --- | --- | --- | --- | --- | --- |
+|----|-------|---------|--------|----------|-----------|------------|
 | 1 | find large files | find . -size +100M -type f | ai | 1 | 0 | 2025-01-08 10:30:00 |
-| 2 | kill port 3000 | lsof -ti:3000 | xargs kill -9 | ai | 1 | 0 | 2025-01-08 11:45:00 |
-| 3 | commit "fixed bug" | git add . && git commit -m "fixed bug" | shortcut | 1 | 0 | 2025-01-08 12:00:00 |
-| 4 | kakiyo | cd ~/projects/kakiyo && code . | shortcut | 1 | 0 | 2025-01-08 14:20:00 |
-| 5 | show disk space | df -h | ai | 0 | NULL | 2025-01-08 15:00:00 |
-| 6 | kill port 3000 | lsof -ti:3000 | xargs kill -9 | ai | 1 | 0 | 2025-01-08 16:30:00 |
+| 2 | killport 3000 | lsof -ti:3000 \| xargs kill -9 | shortcut | 1 | 0 | 2025-01-08 11:45:00 |
+| 3 | show disk space | df -h | ai | 0 | NULL | 2025-01-08 15:00:00 |
 
 **Notes:**
-
-- Entry 5: `executed=0` means user saw the command but chose not to run it
-- Entry 6: Same query as entry 2, but stored separately (history tracks every invocation)
+- Entry 3: `executed=0` means user saw the command but chose not to run it
 
 ---
 
 ## Table: query_stats
 
-Stores aggregated usage statistics. **Never deleted** — stays tiny because it only holds unique queries.
+Stores aggregated usage statistics. **Never deleted** — stays tiny because it only holds unique commands.
 
 ### Schema
 
-| Column | Type | Constraints | Description |
-| --- | --- | --- | --- |
-| id | INTEGER | PRIMARY KEY, AUTO INCREMENT | Unique identifier |
-| query | TEXT | UNIQUE, NOT NULL | Unique natural language query |
-| command | TEXT | NOT NULL | Most recent command for this query |
-| source | TEXT | NOT NULL | "ai" or "shortcut" |
-| use_count | INTEGER | DEFAULT 1 | Total times this query was used |
-| success_count | INTEGER | DEFAULT 0 | Times it succeeded (exit_code=0) |
-| first_used | TEXT | NOT NULL | First time query was used |
-| last_used | TEXT | NOT NULL | Most recent use |
+```sql
+CREATE TABLE IF NOT EXISTS query_stats (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  command TEXT UNIQUE NOT NULL,
+  source TEXT NOT NULL CHECK(source IN ('ai', 'shortcut')),
+  use_count INTEGER DEFAULT 1,
+  success_count INTEGER DEFAULT 0,
+  suggested INTEGER DEFAULT 0,
+  first_used TEXT NOT NULL,
+  last_used TEXT NOT NULL
+);
+```
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | INTEGER | Primary key |
+| command | TEXT | Unique shell command (UNIQUE KEY) |
+| source | TEXT | "ai" or "shortcut" |
+| use_count | INTEGER | Total times this command was used |
+| success_count | INTEGER | Times it succeeded (exit_code=0) |
+| suggested | INTEGER | 0=not suggested, 1=already suggested as shortcut |
+| first_used | TEXT | First time command was used |
+| last_used | TEXT | Most recent use |
+
+### Why Keyed by Command (Not Query)?
+
+Users phrase the same thing differently:
+- "find large files"
+- "find larg files" (typo)
+- "show large files" (synonym)
+
+All might generate the same command: `find . -size +100M -type f`
+
+By keying stats by **command**, we correctly count usage regardless of phrasing!
 
 ### Indexes
 
-| Index Name | Column(s) | Purpose |
-| --- | --- | --- |
-| (automatic) | query | UNIQUE constraint creates index |
-| idx_stats_use_count | use_count | Fast "most used" queries |
+```sql
+CREATE INDEX IF NOT EXISTS idx_stats_use_count ON query_stats(use_count DESC);
+```
 
 ### Retention Policy
 
-**Never deleted.** This table only grows by unique queries, not by usage. Even a power user will have maybe 200-500 unique queries ever.
+**Never deleted.** Only grows by unique commands. Even a power user will have 200-500 unique commands ever — table stays under 100KB.
 
 ### Example Data
 
-| id | query | command | source | use_count | success_count | first_used | last_used |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | find large files | find . -size +100M -type f | ai | 15 | 15 | 2025-01-01 | 2025-01-08 |
-| 2 | kill port 3000 | lsof -ti:3000 | xargs kill -9 | ai | 23 | 20 | 2025-01-02 | 2025-01-08 |
-| 3 | kakiyo | cd ~/projects/kakiyo && code . | shortcut | 45 | 45 | 2025-01-01 | 2025-01-08 |
-| 4 | show disk space | df -h | ai | 8 | 7 | 2025-01-03 | 2025-01-07 |
-| 5 | commit "fixed bug" | git add . && git commit -m "fixed bug" | shortcut | 12 | 12 | 2025-01-02 | 2025-01-08 |
+| id | command | source | use_count | success_count | suggested | first_used | last_used |
+|----|---------|--------|-----------|---------------|-----------|------------|-----------|
+| 1 | find . -size +100M -type f | ai | 15 | 15 | 0 | 2025-01-01 | 2025-01-08 |
+| 2 | lsof -ti:3000 \| xargs kill -9 | ai | 23 | 20 | 1 | 2025-01-02 | 2025-01-08 |
+| 3 | df -h | ai | 8 | 7 | 0 | 2025-01-03 | 2025-01-07 |
 
-**Notes:**
+---
 
-- "kill port 3000" was used 23 times, succeeded 20 times (3 times nothing was on that port)
-- This data powers "suggest shortcuts" feature — query 2 is a great shortcut candidate!
+## Table: metadata
+
+Key-value store for database settings.
+
+```sql
+CREATE TABLE IF NOT EXISTS metadata (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);
+```
+
+| key | value |
+|-----|-------|
+| db_version | "1" |
+| last_cleanup | "2025-01-08T10:00:00.000Z" |
 
 ---
 
@@ -395,7 +446,7 @@ User runs: s find large files
 ┌─────────────────────────────────────┐
 │ 5. Show command, ask confirmation   │
 │    > Will run: find . -size +100M   │
-│    > Execute? (y/n)                 │
+│    > Execute? (y/n/e/c/edit)        │
 └─────────────────────────────────────┘
                 │
                 ▼ (User confirms)
@@ -414,7 +465,6 @@ User runs: s find large files
 │    query_stats table:               │
 │    INCREMENT success_count          │
 └─────────────────────────────────────┘
-
 ```
 
 ### On App Start
@@ -424,24 +474,31 @@ App starts
     │
     ▼
 ┌─────────────────────────────────────┐
-│ 1. Check config.json exists         │
-│    If not → prompt for setup        │
+│ 1. Initialize database              │
+│    Create tables if not exist       │
 └─────────────────────────────────────┘
     │
     ▼
 ┌─────────────────────────────────────┐
-│ 2. Run history cleanup              │
+│ 2. Check if cleanup needed          │
+│    (once per day)                   │
+└─────────────────────────────────────┘
+    │
+    ▼ (if > 24 hours since last cleanup)
+┌─────────────────────────────────────┐
+│ 3. Run history cleanup              │
 │                                     │
 │    DELETE FROM history              │
 │    WHERE created_at < (now - 30d)   │
 │                                     │
 │    DELETE oldest entries            │
 │    IF count > maxEntries            │
+│                                     │
+│    Update metadata.last_cleanup     │
 └─────────────────────────────────────┘
     │
     ▼
     Ready to accept commands
-
 ```
 
 ---
@@ -450,103 +507,46 @@ App starts
 
 ### Get Recent History
 
-**Purpose:** Show user their recent commands (`s --history`)
-
-**Logic:**
-
-- Select from history table
-- Order by created_at descending
-- Limit to 20 (or user-specified)
-
-**Result:**
-
-| # | Query | Command | When |
-| --- | --- | --- | --- |
-| 1 | find large files | find . -size +100M -type f | 2 hours ago |
-| 2 | kill port 3000 | lsof -ti:3000 | xargs kill -9 | 3 hours ago |
-| 3 | commit "fixed bug" | git add . && git commit -m "..." | 5 hours ago |
-
----
+```sql
+SELECT * FROM history 
+ORDER BY created_at DESC 
+LIMIT 20
+```
 
 ### Search History
 
-**Purpose:** Find commands matching a search term (`s --history --search "git"`)
-
-**Logic:**
-
-- Select from history table
-- Where query LIKE %term% OR command LIKE %term%
-- Order by created_at descending
-
-**Result for "git":**
-
-| # | Query | Command | When |
-| --- | --- | --- | --- |
-| 3 | commit "fixed bug" | git add . && git commit -m "..." | 5 hours ago |
-| 8 | undo last commit | git reset --soft HEAD~1 | 2 days ago |
-
----
-
-### Re-run Command
-
-**Purpose:** Execute a command from history (`s --run 3`)
-
-**Logic:**
-
-- Select from history where id = 3
-- Show command, ask confirmation
-- If confirmed, execute
-- Create new history entry (or update existing)
-
----
-
-### Get Frequent Queries (Suggest Shortcuts)
-
-**Purpose:** Find queries user should make into shortcuts (`s --suggest-shortcuts`)
-
-**Logic:**
-
-- Select from query_stats
-- Where use_count >= 3 AND source = 'ai'
-- Order by use_count descending
-
-**Result:**
-
-| Query | Times Used | Suggested Shortcut |
-| --- | --- | --- |
-| kill port 3000 | 23 | `killport {{port}}` |
-| find large files | 15 | `largefiles` |
-| show disk space | 8 | `disk` |
-
-**Note:** Only suggest for AI queries, not existing shortcuts.
-
----
+```sql
+SELECT * FROM history 
+WHERE query LIKE '%git%' OR command LIKE '%git%'
+ORDER BY created_at DESC 
+LIMIT 20
+```
 
 ### Get Stats
 
-**Purpose:** Show usage statistics (`s --stats`)
+```sql
+-- Total commands
+SELECT COUNT(*) FROM history
 
-**Logic:**
+-- Today's commands
+SELECT COUNT(*) FROM history 
+WHERE date(created_at) = date('now')
 
-- Count total from history
-- Count today from history (where date = today)
-- Count this week from history (where date >= 7 days ago)
-- Get top 5 from query_stats by use_count
-
-**Result:**
-
+-- Top commands
+SELECT command, use_count, source FROM query_stats 
+ORDER BY use_count DESC 
+LIMIT 5
 ```
-Total commands: 247
-Today: 12
-This week: 58
 
-Most used:
-1. kakiyo (45 times)
-2. kill port 3000 (23 times)
-3. find large files (15 times)
-4. commit (12 times)
-5. show disk space (8 times)
+### Get Shortcut Suggestions
 
+```sql
+SELECT * FROM query_stats 
+WHERE source = 'ai' 
+  AND use_count >= 3 
+  AND suggested = 0
+ORDER BY use_count DESC
+LIMIT 10
 ```
 
 ---
@@ -556,17 +556,17 @@ Most used:
 ### history table
 
 | Usage | Entries | Approximate Size |
-| --- | --- | --- |
-| Light (10/day × 30 days) | 300 | ~60 KB |
-| Medium (30/day × 30 days) | 900 | ~180 KB |
-| Heavy (50/day × 30 days) | 1,500 | ~300 KB |
+|-------|---------|------------------|
+| Light (10/day x 30 days) | 300 | ~60 KB |
+| Medium (30/day x 30 days) | 900 | ~180 KB |
+| Heavy (50/day x 30 days) | 1,500 | ~300 KB |
 
 **With retention, never exceeds ~500 KB.**
 
 ### query_stats table
 
-| User Type | Unique Queries | Approximate Size |
-| --- | --- | --- |
+| User Type | Unique Commands | Approximate Size |
+|-----------|-----------------|------------------|
 | Casual | 50-100 | ~15 KB |
 | Regular | 100-300 | ~45 KB |
 | Power User | 300-500 | ~75 KB |
@@ -586,78 +586,24 @@ This is tiny. No performance concerns.
 ### Credentials Storage
 
 | Concern | Mitigation |
-| --- | --- |
-| Tokens stored in plain text | Standard practice for CLI tools (like AWS CLI, gh CLI) |
-| Other users on machine could read | File permissions: 600 (owner read/write only) |
-| Malware could steal tokens | Out of scope — same risk as any CLI tool |
+|---------|------------|
+| API keys stored in plain text | Standard practice for CLI tools (like AWS CLI, gh CLI) |
+| Other users on machine could read | File permissions: 0o600 (owner read/write only) |
 
 ### History Privacy
 
 | Concern | Mitigation |
-| --- | --- |
+|---------|------------|
 | Sensitive commands in history | User can disable history in settings |
-| Commands visible to others | Database file permissions: 600 |
+| Commands visible to others | Database file permissions: 0o600 |
 | Clear history | `s --clear-history` command |
-
----
-
-## Migration Strategy
-
-### Why Version Numbers?
-
-If we change the schema later, we need to migrate existing data.
-
-**config.json version 1 → version 2:**
-
-- Read file
-- Check version
-- Apply transformations
-- Update version number
-- Write file
-
-**SQLite migrations:**
-
-- Check if table exists
-- Check if columns exist
-- ALTER TABLE to add new columns
-- Create new tables if needed
-
-### Example Future Migration
-
-Version 1 → Version 2: Add "tags" to shortcuts
-
-```
-Before:
-{
-  "version": 1,
-  "shortcuts": {
-    "commit": { "template": "...", "args": [...] }
-  }
-}
-
-After:
-{
-  "version": 2,
-  "shortcuts": {
-    "commit": { "template": "...", "args": [...], "tags": [] }
-  }
-}
-
-```
-
-Migration logic:
-
-1. Read file
-2. If version < 2, add empty "tags" array to each shortcut
-3. Set version = 2
-4. Write file
 
 ---
 
 ## Summary
 
 | Component | Storage | Size | Cleanup |
-| --- | --- | --- | --- |
+|-----------|---------|------|---------|
 | Settings + Auth | config.json | ~1 KB | Never |
 | Shortcuts | shortcuts.json | ~5 KB | Never (user manages) |
 | Recent History | history table | ~300 KB | Auto (30 days) |

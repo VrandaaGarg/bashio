@@ -1,57 +1,108 @@
-# Shell Agent Commands
+# Shell Agent CLI Reference
 
 Complete reference for all Shell Agent CLI commands.
 
 ---
 
-## Main Usage
+## Quick Reference
 
-```bash
-s <natural language query>    # Convert natural language to shell command
-s <shortcut> [arguments]      # Run a saved shortcut
-```
+| Command | Description |
+|---------|-------------|
+| `s <query>` | Convert natural language to shell command |
+| `s <shortcut> [args]` | Execute a saved shortcut |
+| `s --auth` | Configure AI provider |
+| `s --config` | View current configuration |
+| `s --model` | Change AI model |
+| `s --shortcuts` | List all shortcuts |
+| `s --add-shortcut` | Add a new shortcut |
+| `s --remove-shortcut <name>` | Remove a shortcut |
+| `s --edit-shortcuts` | Edit shortcuts in editor |
+| `s --history` | View command history |
+| `s --stats` | View usage statistics |
+| `s --clear-history` | Clear command history |
+| `s --suggest-shortcuts` | Get shortcut suggestions |
+| `s --help` | Show help |
+| `s --version` | Show version |
 
 ---
 
-## Commands
+## Core Commands
 
-### `s` (default)
+### `s <query>` - Natural Language to Command
 
-Convert natural language to shell commands or run shortcuts.
+Convert natural language queries into shell commands.
 
 ```bash
 s find all files larger than 100mb
 s kill whatever is running on port 3000
-s commit "my message"          # runs shortcut if exists
+s show disk usage sorted by size
+s undo the last git commit
 ```
 
-**Confirmation options:**
+**Output:**
+```
+  > find . -size +100M -type f
+
+  ? Execute? (y/n/e/c/edit)
+```
+
+### Confirmation Options
+
+When prompted `Execute? (y/n/e/c/edit)`:
 
 | Input | Action |
 |-------|--------|
-| `y` or Enter | Execute the command |
-| `n` | Cancel |
-| `e` | Explain what the command does |
-| `c` | Copy to clipboard and exit |
-| `edit` | Edit command before executing |
+| `y` or `Enter` | Execute the command |
+| `n` | Cancel and exit |
+| `e` | Explain what the command does (AI-powered) |
+| `c` | Copy command to clipboard |
+| `edit` | Open in editor to modify before executing |
+
+### `s <shortcut> [args]` - Run Shortcuts
+
+Execute saved shortcuts with optional arguments.
+
+```bash
+s killport 3000
+s commit "my commit message"
+s dev myproject
+```
+
+**Output:**
+```
+  [shortcut: killport]
+  > lsof -ti:3000 | xargs kill -9
+
+  ? Execute? (y/n/e/c/edit)
+```
 
 ---
 
+## Configuration Commands
+
 ### `s --auth`
 
-Configure AI provider for Shell Agent.
+Configure AI provider and credentials. Interactive setup wizard.
 
 ```bash
 s --auth
 ```
 
-**Supported providers:**
-- Claude (Anthropic) - API key
-- OpenAI (ChatGPT) - API key
-- Ollama - Local, free
-- OpenRouter - API key
+**Supported Providers:**
 
----
+| Provider | Auth Method | Models |
+|----------|-------------|--------|
+| Claude (Anthropic) | API Key | claude-sonnet-4, claude-3-5-sonnet, claude-3-5-haiku |
+| OpenAI | API Key | gpt-4o, gpt-4o-mini, gpt-4-turbo |
+| Ollama | Local (no auth) | Any installed model |
+| OpenRouter | API Key | claude-sonnet-4, gpt-4o, gemini-pro, llama-3.1 |
+
+**Flow:**
+1. Select provider
+2. Enter API key (or configure local host for Ollama)
+3. Select model
+4. Credentials validated automatically
+5. Configuration saved to `~/.shell-agent/config.json`
 
 ### `s --config`
 
@@ -61,12 +112,15 @@ View current configuration.
 s --config
 ```
 
-Shows:
-- Current provider
-- Current model
-- Config file location
+**Output:**
+```
+  Shell Agent Configuration
 
----
+  Provider:  claude
+  Model:     claude-sonnet-4-20250514
+
+  Config: ~/.shell-agent/config.json
+```
 
 ### `s --model`
 
@@ -76,24 +130,34 @@ Change AI model within current provider.
 s --model
 ```
 
-Displays available models for your configured provider and lets you select a new one.
+Opens interactive model selector showing available models for your configured provider.
 
 ---
 
+## Shortcuts Commands
+
 ### `s --shortcuts`
 
-List all configured shortcuts.
+List all configured shortcuts in a table format.
 
 ```bash
 s --shortcuts
 ```
 
-Shows a table with:
-- Shortcut name
-- Command template
-- Required arguments
+**Output:**
+```
+  Your Shortcuts
 
----
+  ┌──────────┬─────────────────────────────────────────┬──────────────┐
+  │ Name     │ Template                                │ Arguments    │
+  ├──────────┼─────────────────────────────────────────┼──────────────┤
+  │ killport │ lsof -ti:{{port}} | xargs kill -9       │ port         │
+  │ commit   │ git add . && git commit -m "{{message}}"│ message      │
+  │ dev      │ cd ~/projects/{{project}} && npm run dev│ project      │
+  └──────────┴─────────────────────────────────────────┴──────────────┘
+
+  Total: 3 shortcuts
+```
 
 ### `s --add-shortcut`
 
@@ -104,37 +168,38 @@ Add a new shortcut.
 s --add-shortcut
 ```
 
+Prompts for:
+1. Shortcut name
+2. Command template (use `{{arg}}` for placeholders)
+3. Argument names (comma-separated)
+4. Description (optional)
+
 **One-liner mode:**
 ```bash
-s --add-shortcut <name> "<template>" <args>
+s --add-shortcut <name> "<template>" [args...]
 ```
 
 **Examples:**
 ```bash
-# Interactive
-s --add-shortcut
+# No arguments
+s --add-shortcut disk "df -h"
 
-# One-liner
+# Single argument
 s --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
-s --add-shortcut commit "git add . && git commit -m \"{{message}}\"" message
-s --add-shortcut dev "cd ~/projects/{{project}} && npm run dev" project
+
+# Multiple arguments
+s --add-shortcut deploy "cd ~/projects/{{project}} && git push {{remote}}" project remote
 ```
-
-**Template placeholders:** Use `{{name}}` for arguments.
-
----
 
 ### `s --remove-shortcut <name>`
 
-Remove a shortcut.
+Remove a shortcut by name.
 
 ```bash
 s --remove-shortcut killport
 ```
 
 Asks for confirmation before removing.
-
----
 
 ### `s --edit-shortcuts`
 
@@ -144,9 +209,11 @@ Open shortcuts file in your default editor.
 s --edit-shortcuts
 ```
 
-Opens `~/.shell-agent/shortcuts.json` in `$EDITOR` (or nano/notepad if not set).
+Opens `~/.shell-agent/shortcuts.json` in `$EDITOR` (falls back to nano/notepad).
 
 ---
+
+## History & Statistics Commands
 
 ### `s --history`
 
@@ -162,35 +229,70 @@ s --history -s commit          # Short form search
 
 **Options:**
 
-| Option | Description |
-|--------|-------------|
-| `--limit, -l` | Number of entries to show (default: 20) |
-| `--search, -s` | Search term to filter history |
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--limit` | `-l` | Number of entries to show (default: 20) |
+| `--search` | `-s` | Search term to filter by query or command |
 
-**Output columns:**
-- `#` - Entry number
-- `Command` - The shell command
-- `Query` - Original natural language query (if AI-generated)
-- `Source` - `ai` or `shortcut`
-- `Status` - `✓ success`, `✗ exit:N`, or `○ skipped`
-- `Time` - How long ago
+**Output:**
+```
+  Command History
 
----
+  ┌───┬─────────────────────────────────────┬──────────┬────────────┐
+  │ # │ Command                             │ Source   │ Time       │
+  ├───┼─────────────────────────────────────┼──────────┼────────────┤
+  │ 1 │ find . -size +100M -type f          │ ai       │ 2h ago     │
+  │ 2 │ lsof -ti:3000 | xargs kill -9       │ shortcut │ 3h ago     │
+  │ 3 │ git add . && git commit -m "..."    │ shortcut │ 5h ago     │
+  └───┴─────────────────────────────────────┴──────────┴────────────┘
+
+  Showing 3 of 47 entries
+```
+
+**Status Indicators:**
+- `✓` - Command executed successfully (exit code 0)
+- `✗ exit:N` - Command failed with exit code N
+- `○` - Command was not executed (skipped)
 
 ### `s --stats`
 
-View usage statistics with overview, source breakdown, and most used commands.
+View usage statistics.
 
 ```bash
 s --stats
 ```
 
-**Shows three tables:**
-1. **Overview** - Total commands, execution rate, today/this week counts
-2. **Source Breakdown** - AI vs shortcuts usage percentages
-3. **Most Used Commands** - Top commands ranked by usage
+**Output:**
+```
+  Shell Agent Usage Statistics
 
----
+  Overview
+  ┌──────────────────────┬───────────────┐
+  │ Metric               │         Value │
+  ├──────────────────────┼───────────────┤
+  │ Commands Generated   │           156 │
+  │ Executed             │     142 (91%) │
+  │ Today                │            12 │
+  │ This Week            │            45 │
+  └──────────────────────┴───────────────┘
+
+  Source Breakdown
+  ┌───────────────┬───────┬────────────┐
+  │ Source        │ Count │ Percentage │
+  ├───────────────┼───────┼────────────┤
+  │ AI Generated  │   120 │        77% │
+  │ Shortcuts     │    36 │        23% │
+  └───────────────┴───────┴────────────┘
+
+  Most Used Commands
+  ┌───┬─────────────────────────────────┬──────┬──────────┐
+  │ # │ Command                         │ Uses │   Source │
+  ├───┼─────────────────────────────────┼──────┼──────────┤
+  │ 1 │ lsof -ti:3000 | xargs kill -9   │   23 │ shortcut │
+  │ 2 │ git status                      │   18 │       ai │
+  │ 3 │ docker ps -a                    │   15 │       ai │
+  └───┴─────────────────────────────────┴──────┴──────────┘
+```
 
 ### `s --clear-history`
 
@@ -205,16 +307,14 @@ s --clear-history -o 30           # Short form
 
 **Options:**
 
-| Option | Description |
-|--------|-------------|
-| `--all, -a` | Clear all history entries |
-| `--older-than, -o` | Clear entries older than N days |
-
----
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--all` | `-a` | Clear all history entries |
+| `--older-than` | `-o` | Clear entries older than N days |
 
 ### `s --suggest-shortcuts`
 
-Get personalized shortcut suggestions based on your frequently used commands.
+Get personalized shortcut suggestions based on frequently used commands.
 
 ```bash
 s --suggest-shortcuts              # Default threshold: 3+ uses
@@ -224,23 +324,31 @@ s --suggest-shortcuts -t 2         # Lower threshold
 
 **Options:**
 
-| Option | Description |
-|--------|-------------|
-| `--threshold, -t` | Minimum use count to suggest (default: 3) |
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--threshold` | `-t` | Minimum use count to suggest (default: 3) |
 
-**Interactive prompts:**
+**Output:**
+```
+  Suggested Shortcuts
 
-| Input | Action |
-|-------|--------|
-| `y` | Create the shortcut |
-| `n` | Skip this suggestion |
-| `e` | Exit suggestions |
+  Based on your usage patterns:
 
-When creating a shortcut, you can:
-- Edit the suggested name
-- Parameterize numbers (e.g., port 3000 → `{{arg1}}`)
+  Command: lsof -ti:3000 | xargs kill -9
+  Used: 8 times
+  Suggested name: killport
+
+  ? Create shortcut "killport"? (y/n/e)
+```
+
+**Confirmation options:**
+- `y` - Create the shortcut
+- `n` - Skip this suggestion
+- `e` - Exit suggestions
 
 ---
+
+## Utility Commands
 
 ### `s --help`
 
@@ -249,8 +357,6 @@ Show help with all available commands.
 ```bash
 s --help
 ```
-
----
 
 ### `s --version`
 
@@ -264,52 +370,64 @@ s --version
 
 ## Configuration Files
 
-All configuration is stored in `~/.shell-agent/`:
+All configuration stored in `~/.shell-agent/`:
 
 | File | Purpose |
 |------|---------|
-| `config.json` | AI provider settings and credentials |
+| `config.json` | AI provider settings, credentials, preferences |
 | `shortcuts.json` | User-defined shortcuts |
 | `history.db` | Command history and usage stats (SQLite) |
 
 ### Settings in config.json
 
-You can edit `~/.shell-agent/config.json` to customize these settings:
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `historyEnabled` | `true` | Track command history |
-| `historyRetentionDays` | `30` | Days to keep history |
-| `historyMaxEntries` | `2000` | Maximum history entries |
-| `autoConfirmShortcuts` | `false` | Auto-execute shortcuts without confirmation (dangerous commands still prompt) |
-
-**Example:** To enable auto-confirm for shortcuts, edit your config:
+Customizable settings in `~/.shell-agent/config.json`:
 
 ```json
 {
+  "version": 1,
+  "provider": "claude",
+  "model": "claude-sonnet-4-20250514",
+  "credentials": {
+    "type": "api_key",
+    "apiKey": "sk-ant-..."
+  },
   "settings": {
-    "autoConfirmShortcuts": true
+    "confirmBeforeExecute": true,
+    "historyEnabled": true,
+    "historyRetentionDays": 30,
+    "historyMaxEntries": 2000,
+    "autoConfirmShortcuts": false
   }
 }
 ```
 
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `confirmBeforeExecute` | boolean | `true` | Require confirmation before running commands |
+| `historyEnabled` | boolean | `true` | Track command history |
+| `historyRetentionDays` | number | `30` | Days to keep history before auto-cleanup |
+| `historyMaxEntries` | number | `2000` | Maximum history entries to retain |
+| `autoConfirmShortcuts` | boolean | `false` | Skip confirmation for shortcuts (dangerous commands still prompt) |
+
 ---
 
-## Example Shortcuts
+## Shortcut File Format
+
+Example `~/.shell-agent/shortcuts.json`:
 
 ```json
 {
   "version": 1,
   "shortcuts": {
-    "commit": {
-      "template": "git add . && git commit -m \"{{message}}\"",
-      "args": ["message"],
-      "description": "Stage all and commit"
-    },
     "killport": {
       "template": "lsof -ti:{{port}} | xargs kill -9",
       "args": ["port"],
       "description": "Kill process on port"
+    },
+    "commit": {
+      "template": "git add . && git commit -m \"{{message}}\"",
+      "args": ["message"],
+      "description": "Stage all and commit"
     },
     "dev": {
       "template": "cd ~/projects/{{project}} && npm run dev",
@@ -320,24 +438,21 @@ You can edit `~/.shell-agent/config.json` to customize these settings:
 }
 ```
 
----
+### Placeholder Syntax
 
-## Quick Reference
+Use `{{name}}` for dynamic arguments in templates.
 
-| Command | Description |
-|---------|-------------|
-| `s <query>` | Natural language to command |
-| `s <shortcut> [args]` | Run a shortcut |
-| `s --auth` | Configure AI provider |
-| `s --config` | View configuration |
-| `s --model` | Change AI model |
-| `s --shortcuts` | List shortcuts |
-| `s --add-shortcut` | Add shortcut |
-| `s --remove-shortcut <name>` | Remove shortcut |
-| `s --edit-shortcuts` | Edit shortcuts file |
-| `s --history` | View command history |
-| `s --stats` | View usage statistics |
-| `s --clear-history` | Clear history |
-| `s --suggest-shortcuts` | Get shortcut suggestions |
-| `s --help` | Show help |
-| `s --version` | Show version |
+**Single argument shortcut:**
+```bash
+s killport 3000
+# Expands to: lsof -ti:3000 | xargs kill -9
+```
+
+**Multi-word single argument:**
+```bash
+s commit "fixed the navbar bug"
+# Expands to: git add . && git commit -m "fixed the navbar bug"
+```
+
+**Missing arguments:**
+If required arguments aren't provided, Shell Agent prompts for them interactively.

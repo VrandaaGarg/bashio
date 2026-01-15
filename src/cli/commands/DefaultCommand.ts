@@ -272,18 +272,16 @@ export class DefaultCommand extends Command {
     command: string,
     context: ExecutionContext,
   ): Promise<number> {
-    console.log();
-
-    if (context.shortcutName) {
-      console.log(pc.gray(`  [shortcut: ${context.shortcutName}]`));
-    }
-
-    logger.command(command);
-    console.log();
-
     // Still check for dangerous commands even with auto-confirm
     const danger = detectDangerousShellCommand(command);
     if (danger) {
+      console.log();
+      if (context.shortcutName) {
+        console.log(pc.gray(`  [shortcut: ${context.shortcutName}]`));
+      }
+      logger.command(command);
+      console.log();
+
       const confirmed = await this.promptDangerConfirmation(
         command,
         danger.reasons,
@@ -294,7 +292,7 @@ export class DefaultCommand extends Command {
       }
     }
 
-    console.log(pc.gray('  Executing...\n'));
+    console.log();
     console.log(pc.gray('─'.repeat(50)));
 
     const result = await executeCommand(command);
