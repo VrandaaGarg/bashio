@@ -6,12 +6,16 @@
       "better-sqlite3"
     ]
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "description": "Natural language to shell commands. Stop Googling, start doing.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "s": "./dist/index.js",
-    "shellio": "./dist/index.js"
+    "s": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsup --watch",
