@@ -1,5 +1,5 @@
 {
-  "name": "shell-agent",
+  "name": "shellio",
   "version": "0.4.0",
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -11,7 +11,7 @@
   "main": "./dist/index.js",
   "bin": {
     "s": "./dist/index.js",
-    "shell-agent": "./dist/index.js"
+    "shellio": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsup --watch",
@@ -28,7 +28,18 @@
     "terminal",
     "command-line"
   ],
-  "author": "",
+  "author": {
+    "name": "Vranda Garg",
+    "url": "https://vrandagarg.in"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VrandaaGarg/shellio"
+  },
+  "homepage": "https://github.com/VrandaaGarg/shellio#readme",
+  "bugs": {
+    "url": "https://github.com/VrandaaGarg/shellio/issues"
+  },
   "license": "MIT",
   "packageManager": "pnpm@10.17.1",
   "engines": {

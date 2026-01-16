@@ -82,7 +82,7 @@ export class DefaultCommand extends Command {
 
     // Step 2: Not a shortcut, use AI provider
     if (!configExists()) {
-      logger.warn('Shell Agent is not configured yet.');
+      logger.warn('Shellio is not configured yet.');
       console.log(pc.gray("Run 's --auth' to set up your AI provider.\n"));
       return 1;
     }
@@ -128,9 +128,7 @@ export class DefaultCommand extends Command {
   }
 
   private showHelp(): void {
-    console.log(
-      pc.bold('\n  Shell Agent - Natural language to shell commands\n'),
-    );
+    console.log(pc.bold('\n  Shellio - Natural language to shell commands\n'));
     console.log('  Usage:');
     console.log(pc.cyan('    s <natural language query>'));
     console.log(pc.cyan('    s <shortcut> [arguments]'));

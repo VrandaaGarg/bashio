@@ -14,7 +14,7 @@ export class StatsCommand extends Command {
   async execute(): Promise<number> {
     const stats = getStats();
 
-    console.log(pc.bold('\n  Shell Agent Usage Statistics\n'));
+    console.log(pc.bold('\n  Shellio Usage Statistics\n'));
 
     // Overview stats table
     renderTable({

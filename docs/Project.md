@@ -1,4 +1,4 @@
-# Shell Agent - Project Overview
+# Shellio - Project Overview
 
 ## One-Liner
 
@@ -186,7 +186,7 @@ Track what commands you use. Enable pattern detection and suggestions.
 
 ## Data Storage
 
-All user data stored locally in `~/.shell-agent/`:
+All user data stored locally in `~/.shellio/`:
 
 | File | Format | Purpose |
 |------|--------|---------|
@@ -213,7 +213,7 @@ All user data stored locally in `~/.shell-agent/`:
 
 ## Competitive Advantage
 
-| Feature | Others | Shell Agent |
+| Feature | Others | Shellio |
 |---------|--------|-------------|
 | Custom shortcuts | None | First-class feature |
 | Multi-provider | Some | Claude, OpenAI, Ollama, OpenRouter |
@@ -236,7 +236,7 @@ All user data stored locally in `~/.shell-agent/`:
 
 ## Summary
 
-**Shell Agent** is a local CLI tool that converts natural language to shell commands.
+**Shellio** is a local CLI tool that converts natural language to shell commands.
 
 **Key differentiators:**
 - Custom shortcuts with placeholders

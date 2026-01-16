@@ -1,15 +1,15 @@
-# Shell Agent - Implementation Guide
+# Shellio - Implementation Guide
 
 ## Overview
 
-Shell Agent is a CLI tool that converts natural language to shell commands. This document explains the implementation architecture and core components.
+Shellio is a CLI tool that converts natural language to shell commands. This document explains the implementation architecture and core components.
 
 ---
 
 ## Project Structure
 
 ```
-shell-agent/
+shellio/
 ├── src/
 │   ├── index.ts              # Entry point (runs CLI)
 │   ├── cli/
@@ -89,7 +89,7 @@ if (shouldRunCleanup()) {
 }
 
 const cli = new Cli({
-  binaryLabel: 'Shell Agent',
+  binaryLabel: 'Shellio',
   binaryName: 's',
   binaryVersion: '0.4.0',
 });
@@ -105,10 +105,10 @@ export { cli };
 
 ### 3. Config Management (`src/core/config.ts`)
 
-Manages `~/.shell-agent/config.json`:
+Manages `~/.shellio/config.json`:
 
 ```typescript
-const CONFIG_DIR = join(homedir(), '.shell-agent');
+const CONFIG_DIR = join(homedir(), '.shellio');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 export function ensureConfigDir(): void {
@@ -414,7 +414,7 @@ $ s find large files
 1. Parse query via Clipanion
 2. Check shortcuts.json for "find" shortcut
    → Not found, continue to AI
-3. Load config from ~/.shell-agent/config.json
+3. Load config from ~/.shellio/config.json
 4. Create AI provider instance (Claude/OpenAI/etc)
 5. Show spinner "Generating command..."
 6. Call AI API with query

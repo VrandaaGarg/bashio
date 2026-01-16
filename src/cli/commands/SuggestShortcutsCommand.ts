@@ -35,7 +35,7 @@ export class SuggestShortcutsCommand extends Command {
     if (suggestions.length === 0) {
       console.log(
         pc.gray(
-          '  No suggestions yet. Use Shell Agent more to get personalized suggestions.',
+          '  No suggestions yet. Use Shellio more to get personalized suggestions.',
         ),
       );
       console.log(

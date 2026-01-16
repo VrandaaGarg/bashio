@@ -7,13 +7,13 @@ export class ConfigCommand extends Command {
   static paths = [['config'], ['--config']];
 
   static usage = Command.Usage({
-    description: 'View current Shell Agent configuration',
+    description: 'View current Shellio configuration',
     examples: [['View config', '$0 --config']],
   });
 
   async execute(): Promise<number> {
     if (!configExists()) {
-      logger.warn('Shell Agent is not configured yet.');
+      logger.warn('Shellio is not configured yet.');
       console.log(pc.gray("Run 's --auth' to set up your AI provider.\n"));
       return 1;
     }
@@ -24,7 +24,7 @@ export class ConfigCommand extends Command {
       return 1;
     }
 
-    console.log(pc.bold('\n  Shell Agent Configuration\n'));
+    console.log(pc.bold('\n  Shellio Configuration\n'));
     console.log(`  Provider:    ${pc.cyan(config.provider)}`);
     console.log(`  Model:       ${pc.cyan(config.model)}`);
     console.log(`  Auth:        ${pc.green('Configured')}`);

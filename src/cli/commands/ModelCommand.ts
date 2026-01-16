@@ -82,7 +82,7 @@ export class ModelCommand extends Command {
 
   async execute(): Promise<number> {
     if (!configExists()) {
-      logger.warn('Shell Agent is not configured yet.');
+      logger.warn('Shellio is not configured yet.');
       console.log(
         pc.gray("Run 's --auth' to set up your AI provider first.\n"),
       );

@@ -9,7 +9,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { Config } from './types.js';
 
-const CONFIG_DIR = join(homedir(), '.shell-agent');
+const CONFIG_DIR = join(homedir(), '.shellio');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 export function ensureConfigDir(): void {

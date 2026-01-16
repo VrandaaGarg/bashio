@@ -17,12 +17,12 @@ export class AuthCommand extends Command {
   static paths = [['auth'], ['--auth']];
 
   static usage = Command.Usage({
-    description: 'Configure AI provider for Shell Agent',
+    description: 'Configure AI provider for Shellio',
     examples: [['Configure AI provider', '$0 --auth']],
   });
 
   async execute(): Promise<number> {
-    console.log(pc.bold('\n  Shell Agent Setup\n'));
+    console.log(pc.bold('\n  Shellio Setup\n'));
 
     const provider = await select<ProviderName>({
       message: 'Select your AI provider:',

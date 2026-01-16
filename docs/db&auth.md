@@ -2,13 +2,13 @@
 
 ## Overview
 
-Shell Agent is a **fully local CLI tool**. There is no cloud, no server, no user accounts. Everything lives on the user's machine.
+Shellio is a **fully local CLI tool**. There is no cloud, no server, no user accounts. Everything lives on the user's machine.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    USER'S MACHINE                            │
 │                                                              │
-│   ~/.shell-agent/                                            │
+│   ~/.shellio/                                            │
 │   ├── config.json        ← Settings + AI provider auth       │
 │   ├── shortcuts.json     ← Custom shortcuts                  │
 │   └── history.db         ← SQLite database                   │
@@ -23,7 +23,7 @@ Shell Agent is a **fully local CLI tool**. There is no cloud, no server, no user
 
 ### What Auth Means Here
 
-There is **no Shell Agent account**. The only "auth" is connecting to an AI provider so the tool can generate commands.
+There is **no Shellio account**. The only "auth" is connecting to an AI provider so the tool can generate commands.
 
 ### Supported Providers
 
@@ -79,7 +79,7 @@ User runs: s --auth
 ### Where Credentials Are Stored
 
 ```
-~/.shell-agent/config.json
+~/.shellio/config.json
 ```
 
 Credentials never leave the user's machine. We never see them. We have no server.
@@ -118,7 +118,7 @@ User runs: s find large files
 ### File Locations
 
 ```
-~/.shell-agent/
+~/.shellio/
 │
 ├── config.json           JSON     ~1 KB      Settings + credentials
 ├── shortcuts.json        JSON     ~5 KB      Custom shortcuts
@@ -260,7 +260,7 @@ SQLite gives us database power with file simplicity.
 ### Database Location
 
 ```
-~/.shell-agent/history.db
+~/.shellio/history.db
 ```
 
 File permissions: `0o600` (owner read/write only)

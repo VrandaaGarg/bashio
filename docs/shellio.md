@@ -1,4 +1,4 @@
-# Shell Agent - Features & Architecture
+# Shellio - Features & Architecture
 
 > Transform natural language into shell commands. Stop googling, start doing.
 
@@ -238,7 +238,7 @@ $ s --remove-shortcut backup
 
 ```bash
 $ s --edit-shortcuts
-# Opens ~/.shell-agent/shortcuts.json in $EDITOR
+# Opens ~/.shellio/shortcuts.json in $EDITOR
 ```
 
 ### Shortcut File Format
@@ -322,7 +322,7 @@ One-time setup to configure which AI powers your shell agent.
 ```bash
 $ s --auth
 
-  Shell Agent Setup
+  Shellio Setup
 
 ? Select your AI provider:
   > Claude (Anthropic)     - Use Anthropic API key
@@ -428,12 +428,12 @@ $ s --model
 ```bash
 $ s --config
 
-  Shell Agent Configuration
+  Shellio Configuration
 
   Provider:  claude
   Model:     claude-sonnet-4-20250514
 
-  Config: ~/.shell-agent/config.json
+  Config: ~/.shellio/config.json
 ```
 
 ---
@@ -498,7 +498,7 @@ The system learns which commands you use frequently and suggests creating shortc
 ```bash
 $ s --stats
 
-  Shell Agent Usage Statistics
+  Shellio Usage Statistics
 
   Overview
   ┌──────────────────────┬───────────────┐
@@ -526,7 +526,7 @@ $ s --stats
 
 ### Dangerous Command Detection
 
-Shell Agent automatically detects potentially dangerous operations:
+Shellio automatically detects potentially dangerous operations:
 
 ```bash
 $ s delete everything in the home directory
@@ -607,7 +607,7 @@ s --version                       # Show version
 ### File Locations
 
 ```
-~/.shell-agent/
+~/.shellio/
 ├── config.json           # Main configuration
 ├── shortcuts.json        # Custom shortcuts
 └── history.db            # Command history (SQLite)
@@ -723,7 +723,7 @@ s --version                       # Show version
 ### Directory Structure
 
 ```
-shell-agent/
+shellio/
 ├── src/
 │   ├── index.ts              # Entry point
 │   ├── cli/

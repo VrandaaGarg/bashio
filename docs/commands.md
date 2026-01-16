@@ -1,6 +1,6 @@
-# Shell Agent CLI Reference
+# Shellio CLI Reference
 
-Complete reference for all Shell Agent CLI commands.
+Complete reference for all Shellio CLI commands.
 
 ---
 
@@ -102,7 +102,7 @@ s --auth
 2. Enter API key (or configure local host for Ollama)
 3. Select model
 4. Credentials validated automatically
-5. Configuration saved to `~/.shell-agent/config.json`
+5. Configuration saved to `~/.shellio/config.json`
 
 ### `s --config`
 
@@ -114,12 +114,12 @@ s --config
 
 **Output:**
 ```
-  Shell Agent Configuration
+  Shellio Configuration
 
   Provider:  claude
   Model:     claude-sonnet-4-20250514
 
-  Config: ~/.shell-agent/config.json
+  Config: ~/.shellio/config.json
 ```
 
 ### `s --model`
@@ -209,7 +209,7 @@ Open shortcuts file in your default editor.
 s --edit-shortcuts
 ```
 
-Opens `~/.shell-agent/shortcuts.json` in `$EDITOR` (falls back to nano/notepad).
+Opens `~/.shellio/shortcuts.json` in `$EDITOR` (falls back to nano/notepad).
 
 ---
 
@@ -264,7 +264,7 @@ s --stats
 
 **Output:**
 ```
-  Shell Agent Usage Statistics
+  Shellio Usage Statistics
 
   Overview
   ┌──────────────────────┬───────────────┐
@@ -360,7 +360,7 @@ s --help
 
 ### `s --version`
 
-Show Shell Agent version.
+Show Shellio version.
 
 ```bash
 s --version
@@ -370,7 +370,7 @@ s --version
 
 ## Configuration Files
 
-All configuration stored in `~/.shell-agent/`:
+All configuration stored in `~/.shellio/`:
 
 | File | Purpose |
 |------|---------|
@@ -380,7 +380,7 @@ All configuration stored in `~/.shell-agent/`:
 
 ### Settings in config.json
 
-Customizable settings in `~/.shell-agent/config.json`:
+Customizable settings in `~/.shellio/config.json`:
 
 ```json
 {
@@ -413,7 +413,7 @@ Customizable settings in `~/.shell-agent/config.json`:
 
 ## Shortcut File Format
 
-Example `~/.shell-agent/shortcuts.json`:
+Example `~/.shellio/shortcuts.json`:
 
 ```json
 {
@@ -455,4 +455,4 @@ s commit "fixed the navbar bug"
 ```
 
 **Missing arguments:**
-If required arguments aren't provided, Shell Agent prompts for them interactively.
+If required arguments aren't provided, Shellio prompts for them interactively.

@@ -27,7 +27,7 @@ if (shouldRunCleanup()) {
 }
 
 const cli = new Cli({
-  binaryLabel: 'Shell Agent',
+  binaryLabel: 'Shellio',
   binaryName: 's',
   binaryVersion: '0.4.0',
 });

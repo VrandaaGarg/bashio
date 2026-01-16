@@ -1,8 +1,8 @@
-# Shell Agent
+# Shellio
 
 > **Natural language to shell commands. Stop Googling, start doing.**
 
-Shell Agent is an AI-powered CLI tool that translates your everyday language into precise shell commands. Just describe what you want to do, and let AI handle the syntax.
+Shellio is an AI-powered CLI tool that translates your everyday language into precise shell commands. Just describe what you want to do, and let AI handle the syntax.
 
 ```bash
 $ s find all files larger than 100mb and delete them
@@ -25,7 +25,7 @@ $ s find all files larger than 100mb and delete them
 - **Explain Mode** - Understand what any command does before executing
 - **Command History** - Track all generated commands with usage statistics
 - **Smart Suggestions** - Get shortcut recommendations based on your usage patterns
-- **Privacy First** - All data stored locally in `~/.shell-agent/`, never sent to external servers
+- **Privacy First** - All data stored locally in `~/.shellio/`, never sent to external servers
 
 ---
 
@@ -40,8 +40,8 @@ $ s find all files larger than 100mb and delete them
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/shell-agent.git
-cd shell-agent
+git clone https://github.com/VrandaaGarg/shellio.git
+cd shellio
 
 # Install dependencies
 pnpm install
@@ -164,7 +164,7 @@ s dockerrun myapp bash
 
 ## AI Providers
 
-Shell Agent supports multiple AI providers. Configure with `s --auth`:
+Shellio supports multiple AI providers. Configure with `s --auth`:
 
 | Provider | Auth Method | Cost | Best For |
 |----------|-------------|------|----------|
@@ -206,7 +206,7 @@ s --model    # Interactive model selection
 
 ## History & Statistics
 
-Shell Agent tracks your command history for insights and suggestions.
+Shellio tracks your command history for insights and suggestions.
 
 ### View History
 
@@ -222,7 +222,7 @@ s --stats
 ```
 
 ```
-  Shell Agent Usage Statistics
+  Shellio Usage Statistics
 
   Overview
   ┌──────────────────────┬───────────────┐
@@ -246,7 +246,7 @@ s --stats
 
 ### Smart Shortcut Suggestions
 
-Based on your usage patterns, Shell Agent suggests commands to save as shortcuts:
+Based on your usage patterns, Shellio suggests commands to save as shortcuts:
 
 ```bash
 s --suggest-shortcuts
@@ -262,10 +262,10 @@ s --clear-history        # Clear all history
 
 ## Configuration
 
-All configuration is stored locally at `~/.shell-agent/`:
+All configuration is stored locally at `~/.shellio/`:
 
 ```
-~/.shell-agent/
+~/.shellio/
 ├── config.json      # Provider settings and preferences
 ├── shortcuts.json   # Custom shortcuts
 └── history.db       # Command history (SQLite)
@@ -361,7 +361,7 @@ s --config
 
 ### Dangerous Command Detection
 
-Shell Agent automatically detects potentially dangerous operations and requires explicit confirmation:
+Shellio automatically detects potentially dangerous operations and requires explicit confirmation:
 
 - Recursive deletions (`rm -rf`)
 - System-wide operations (`sudo`, root access)

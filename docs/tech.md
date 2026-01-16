@@ -1,6 +1,6 @@
-# Shell Agent - Tech Stack
+# Shellio - Tech Stack
 
-Complete breakdown of technologies used in Shell Agent.
+Complete breakdown of technologies used in Shellio.
 
 ---
 
@@ -75,7 +75,7 @@ Complete breakdown of technologies used in Shell Agent.
 import { Cli, Command, Option } from 'clipanion';
 
 const cli = new Cli({
-  binaryLabel: 'Shell Agent',
+  binaryLabel: 'Shellio',
   binaryName: 's',
   binaryVersion: '0.4.0',
 });
@@ -133,7 +133,7 @@ const provider = await select({
 ```typescript
 import Database from 'better-sqlite3';
 
-const db = new Database('~/.shell-agent/history.db');
+const db = new Database('~/.shellio/history.db');
 db.pragma('journal_mode = WAL');
 
 // Queries are synchronous (no await needed)
@@ -342,7 +342,7 @@ pnpm typecheck  # Runs: tsc --noEmit
 | **Fast startup** | Minimal dependencies, native ESM, tsup bundling |
 | **Type safety** | TypeScript + Zod (compile-time + runtime) |
 | **Beautiful UX** | picocolors + ora + @inquirer/prompts |
-| **Local-first** | SQLite + JSON files in ~/.shell-agent/ |
+| **Local-first** | SQLite + JSON files in ~/.shellio/ |
 | **Developer experience** | Biome (fast linting), tsup watch mode |
 | **Portability** | No external services required (except AI APIs) |
 
@@ -351,7 +351,7 @@ pnpm typecheck  # Runs: tsc --noEmit
 ## Dependency Graph
 
 ```
-shell-agent
+shellio
 ├── Runtime
 │   ├── node (>=22.0.0)
 │   └── typescript (^5.9.3)
