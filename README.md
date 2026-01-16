@@ -1,11 +1,11 @@
-# Shellio
+# Bashio
 
 > **Natural language to shell commands. Stop Googling, start doing.**
 
-Shellio is an AI-powered CLI tool that translates your everyday language into precise shell commands. Just describe what you want to do, and let AI handle the syntax.
+Bashio is an AI-powered CLI tool that translates your everyday language into precise shell commands. Just describe what you want to do, and let AI handle the syntax.
 
 ```bash
-$ s find all files larger than 100mb and delete them
+$ b find all files larger than 100mb and delete them
 ```
 ```
   > find . -size +100M -type f -delete
@@ -25,7 +25,7 @@ $ s find all files larger than 100mb and delete them
 - **Explain Mode** - Understand what any command does before executing
 - **Command History** - Track all generated commands with usage statistics
 - **Smart Suggestions** - Get shortcut recommendations based on your usage patterns
-- **Privacy First** - All data stored locally in `~/.shellio/`, never sent to external servers
+- **Privacy First** - All data stored locally in `~/.bashio/`, never sent to external servers
 
 ---
 
@@ -40,8 +40,8 @@ $ s find all files larger than 100mb and delete them
 
 ```bash
 # Clone the repository
-git clone https://github.com/VrandaaGarg/shellio.git
-cd shellio
+git clone https://github.com/VrandaaGarg/bashio.git
+cd bashio
 
 # Install dependencies
 pnpm install
@@ -49,7 +49,7 @@ pnpm install
 # Build the project
 pnpm build
 
-# Link globally to use 's' command anywhere
+# Link globally to use 'b' command anywhere
 pnpm link --global
 ```
 
@@ -57,10 +57,10 @@ pnpm link --global
 
 ```bash
 # 1. Configure your AI provider
-s --auth
+b --auth
 
 # 2. Start using natural language commands
-s find all png files in current directory
+b find all png files in current directory
 ```
 
 ---
@@ -69,29 +69,29 @@ s find all png files in current directory
 
 ### Natural Language Commands
 
-Simply prefix your request with `s` and describe what you want:
+Simply prefix your request with `b` and describe what you want:
 
 ```bash
 # File operations
-s find all javascript files modified today
-s delete all node_modules folders recursively
-s count lines of code in all typescript files
-s compress all images in this folder
+b find all javascript files modified today
+b delete all node_modules folders recursively
+b count lines of code in all typescript files
+b compress all images in this folder
 
 # Git operations
-s undo the last commit but keep changes
-s show commits from last week by author john
-s create a new branch called feature/auth
+b undo the last commit but keep changes
+b show commits from last week by author john
+b create a new branch called feature/auth
 
 # System operations
-s show disk usage sorted by size
-s what is my public ip address
-s kill whatever is running on port 3000
-s list all running docker containers
+b show disk usage sorted by size
+b what is my public ip address
+b kill whatever is running on port 3000
+b list all running docker containers
 
 # Network operations
-s download this file and save as data.json
-s check if google.com is reachable
+b download this file and save as data.json
+b check if google.com is reachable
 ```
 
 ### Confirmation Options
@@ -116,20 +116,20 @@ Create reusable command templates for frequently used operations.
 
 ```bash
 # Interactive mode
-s --add-shortcut
+b --add-shortcut
 
 # One-liner with placeholders
-s --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
+b --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
 
 # Multi-argument shortcut
-s --add-shortcut deploy "git push {{remote}} {{branch}}" remote branch
+b --add-shortcut deploy "git push {{remote}} {{branch}}" remote branch
 ```
 
 ### Using Shortcuts
 
 ```bash
 # Single argument - all remaining text becomes the argument
-s killport 3000
+b killport 3000
 
 # Output:
 #   [shortcut: killport]
@@ -137,15 +137,15 @@ s killport 3000
 #   ? Execute? (y/n/e/c/edit)
 
 # Multi-word single argument (great for commit messages)
-s commit "Add user authentication feature"
+b commit "Add user authentication feature"
 ```
 
 ### Managing Shortcuts
 
 ```bash
-s --shortcuts           # List all shortcuts
-s --edit-shortcuts      # Edit shortcuts in your default editor
-s --remove-shortcut killport  # Remove a specific shortcut
+b --shortcuts           # List all shortcuts
+b --edit-shortcuts      # Edit shortcuts in your default editor
+b --remove-shortcut killport  # Remove a specific shortcut
 ```
 
 ### Placeholder Syntax
@@ -156,7 +156,7 @@ Use `{{name}}` for dynamic arguments:
 # Template: "docker exec -it {{container}} {{cmd}}"
 # Args: container, cmd
 
-s dockerrun myapp bash
+b dockerrun myapp bash
 # Expands to: docker exec -it myapp bash
 ```
 
@@ -164,7 +164,7 @@ s dockerrun myapp bash
 
 ## AI Providers
 
-Shellio supports multiple AI providers. Configure with `s --auth`:
+Bashio supports multiple AI providers. Configure with `b --auth`:
 
 | Provider | Auth Method | Cost | Best For |
 |----------|-------------|------|----------|
@@ -199,30 +199,30 @@ Any model installed on your machine:
 ### Switching Models
 
 ```bash
-s --model    # Interactive model selection
+b --model    # Interactive model selection
 ```
 
 ---
 
 ## History & Statistics
 
-Shellio tracks your command history for insights and suggestions.
+Bashio tracks your command history for insights and suggestions.
 
 ### View History
 
 ```bash
-s --history              # Show recent command history
-s --history --search git # Search history for specific terms
+b --history              # Show recent command history
+b --history --search git # Search history for specific terms
 ```
 
 ### Usage Statistics
 
 ```bash
-s --stats
+b --stats
 ```
 
 ```
-  Shellio Usage Statistics
+  Bashio Usage Statistics
 
   Overview
   ┌──────────────────────┬───────────────┐
@@ -246,26 +246,26 @@ s --stats
 
 ### Smart Shortcut Suggestions
 
-Based on your usage patterns, Shellio suggests commands to save as shortcuts:
+Based on your usage patterns, Bashio suggests commands to save as shortcuts:
 
 ```bash
-s --suggest-shortcuts
+b --suggest-shortcuts
 ```
 
 ### Clear History
 
 ```bash
-s --clear-history        # Clear all history
+b --clear-history        # Clear all history
 ```
 
 ---
 
 ## Configuration
 
-All configuration is stored locally at `~/.shellio/`:
+All configuration is stored locally at `~/.bashio/`:
 
 ```
-~/.shellio/
+~/.bashio/
 ├── config.json      # Provider settings and preferences
 ├── shortcuts.json   # Custom shortcuts
 └── history.db       # Command history (SQLite)
@@ -307,7 +307,7 @@ The `config.json` file contains customizable settings:
 ### View Current Configuration
 
 ```bash
-s --config
+b --config
 ```
 
 ---
@@ -318,42 +318,42 @@ s --config
 
 | Command | Description |
 |---------|-------------|
-| `s <query>` | Convert natural language to shell command |
-| `s <shortcut> [args]` | Execute a saved shortcut |
+| `b <query>` | Convert natural language to shell command |
+| `b <shortcut> [args]` | Execute a saved shortcut |
 
 ### Configuration
 
 | Command | Description |
 |---------|-------------|
-| `s --auth` | Configure AI provider and credentials |
-| `s --config` | View current configuration |
-| `s --model` | Change the AI model |
+| `b --auth` | Configure AI provider and credentials |
+| `b --config` | View current configuration |
+| `b --model` | Change the AI model |
 
 ### Shortcuts Management
 
 | Command | Description |
 |---------|-------------|
-| `s --shortcuts` | List all saved shortcuts |
-| `s --add-shortcut` | Create a new shortcut (interactive) |
-| `s --add-shortcut <name> <template> [args...]` | Create shortcut (one-liner) |
-| `s --edit-shortcuts` | Edit shortcuts in default editor |
-| `s --remove-shortcut <name>` | Delete a shortcut |
+| `b --shortcuts` | List all saved shortcuts |
+| `b --add-shortcut` | Create a new shortcut (interactive) |
+| `b --add-shortcut <name> <template> [args...]` | Create shortcut (one-liner) |
+| `b --edit-shortcuts` | Edit shortcuts in default editor |
+| `b --remove-shortcut <name>` | Delete a shortcut |
 
 ### History & Analytics
 
 | Command | Description |
 |---------|-------------|
-| `s --history` | View command history |
-| `s --stats` | View usage statistics |
-| `s --clear-history` | Clear command history |
-| `s --suggest-shortcuts` | Get shortcut suggestions based on usage |
+| `b --history` | View command history |
+| `b --stats` | View usage statistics |
+| `b --clear-history` | Clear command history |
+| `b --suggest-shortcuts` | Get shortcut suggestions based on usage |
 
 ### Help
 
 | Command | Description |
 |---------|-------------|
-| `s --help` | Show help information |
-| `s --version` | Show version number |
+| `b --help` | Show help information |
+| `b --version` | Show version number |
 
 ---
 
@@ -361,7 +361,7 @@ s --config
 
 ### Dangerous Command Detection
 
-Shellio automatically detects potentially dangerous operations and requires explicit confirmation:
+Bashio automatically detects potentially dangerous operations and requires explicit confirmation:
 
 - Recursive deletions (`rm -rf`)
 - System-wide operations (`sudo`, root access)
@@ -369,7 +369,7 @@ Shellio automatically detects potentially dangerous operations and requires expl
 - Disk operations (formatting, partitioning)
 
 ```bash
-$ s delete everything in the home directory
+$ b delete everything in the home directory
 
   > rm -rf ~/*
 

@@ -17,12 +17,12 @@ export class AuthCommand extends Command {
   static paths = [['auth'], ['--auth']];
 
   static usage = Command.Usage({
-    description: 'Configure AI provider for Shellio',
+    description: 'Configure AI provider for Bashio',
     examples: [['Configure AI provider', '$0 --auth']],
   });
 
   async execute(): Promise<number> {
-    console.log(pc.bold('\n  Shellio Setup\n'));
+    console.log(pc.bold('\n  Bashio Setup\n'));
 
     const provider = await select<ProviderName>({
       message: 'Select your AI provider:',
@@ -182,7 +182,7 @@ export class AuthCommand extends Command {
     console.log();
     console.log(
       pc.green("You're all set! Try:"),
-      pc.cyan('s find all png files'),
+      pc.cyan('b find all png files'),
     );
     console.log();
 

@@ -82,9 +82,9 @@ export class ModelCommand extends Command {
 
   async execute(): Promise<number> {
     if (!configExists()) {
-      logger.warn('Shellio is not configured yet.');
+      logger.warn('Bashio is not configured yet.');
       console.log(
-        pc.gray("Run 's --auth' to set up your AI provider first.\n"),
+        pc.gray("Run 'b --auth' to set up your AI provider first.\n"),
       );
       return 1;
     }

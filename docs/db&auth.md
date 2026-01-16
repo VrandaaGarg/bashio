@@ -2,13 +2,13 @@
 
 ## Overview
 
-Shellio is a **fully local CLI tool**. There is no cloud, no server, no user accounts. Everything lives on the user's machine.
+Bashio is a **fully local CLI tool**. There is no cloud, no server, no user accounts. Everything lives on the user's machine.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    USER'S MACHINE                            │
 │                                                              │
-│   ~/.shellio/                                            │
+│   ~/.bashio/                                             │
 │   ├── config.json        ← Settings + AI provider auth       │
 │   ├── shortcuts.json     ← Custom shortcuts                  │
 │   └── history.db         ← SQLite database                   │
@@ -23,7 +23,7 @@ Shellio is a **fully local CLI tool**. There is no cloud, no server, no user acc
 
 ### What Auth Means Here
 
-There is **no Shellio account**. The only "auth" is connecting to an AI provider so the tool can generate commands.
+There is **no Bashio account**. The only "auth" is connecting to an AI provider so the tool can generate commands.
 
 ### Supported Providers
 
@@ -37,7 +37,7 @@ There is **no Shellio account**. The only "auth" is connecting to an AI provider
 ### Auth Flow
 
 ```
-User runs: s --auth
+User runs: b --auth
                 │
                 ▼
 ┌─────────────────────────────────────┐
@@ -79,7 +79,7 @@ User runs: s --auth
 ### Where Credentials Are Stored
 
 ```
-~/.shellio/config.json
+~/.bashio/config.json
 ```
 
 Credentials never leave the user's machine. We never see them. We have no server.
@@ -89,7 +89,7 @@ Credentials never leave the user's machine. We never see them. We have no server
 When an API call fails due to invalid credentials:
 
 ```
-User runs: s find large files
+User runs: b find large files
                 │
                 ▼
         API call fails (401 unauthorized)
@@ -99,7 +99,7 @@ User runs: s find large files
 │  ✗ Failed to generate command       │
 │  Claude API error: 401 - ...        │
 │                                     │
-│  Run 's --auth' to reconfigure.     │
+│  Run 'b --auth' to reconfigure.     │
 └─────────────────────────────────────┘
 ```
 
@@ -118,7 +118,7 @@ User runs: s find large files
 ### File Locations
 
 ```
-~/.shellio/
+~/.bashio/
 │
 ├── config.json           JSON     ~1 KB      Settings + credentials
 ├── shortcuts.json        JSON     ~5 KB      Custom shortcuts
@@ -237,9 +237,9 @@ Stores user-defined command shortcuts.
 
 | User Types | Shortcut Found | Args Extracted | Final Command |
 |------------|---------------|----------------|---------------|
-| `s commit "fixed bug"` | commit | message="fixed bug" | `git add . && git commit -m "fixed bug"` |
-| `s killport 3000` | killport | port=3000 | `lsof -ti:3000 \| xargs kill -9` |
-| `s dev myapp` | dev | project=myapp | `cd ~/projects/myapp && npm run dev` |
+| `b commit "fixed bug"` | commit | message="fixed bug" | `git add . && git commit -m "fixed bug"` |
+| `b killport 3000` | killport | port=3000 | `lsof -ti:3000 \| xargs kill -9` |
+| `b dev myapp` | dev | project=myapp | `cd ~/projects/myapp && npm run dev` |
 
 ---
 
@@ -260,7 +260,7 @@ SQLite gives us database power with file simplicity.
 ### Database Location
 
 ```
-~/.shellio/history.db
+~/.bashio/history.db
 ```
 
 File permissions: `0o600` (owner read/write only)
@@ -408,7 +408,7 @@ CREATE TABLE IF NOT EXISTS metadata (
 ### On Every Command
 
 ```
-User runs: s find large files
+User runs: b find large files
                 │
                 ▼
 ┌─────────────────────────────────────┐
@@ -596,7 +596,7 @@ This is tiny. No performance concerns.
 |---------|------------|
 | Sensitive commands in history | User can disable history in settings |
 | Commands visible to others | Database file permissions: 0o600 |
-| Clear history | `s --clear-history` command |
+| Clear history | `b --clear-history` command |
 
 ---
 

@@ -1,9 +1,9 @@
-# Shellio - Features & Architecture
+# Bashio - Features & Architecture
 
 > Transform natural language into shell commands. Stop googling, start doing.
 
 ```bash
-$ s find all files larger than 100mb and delete them
+$ b find all files larger than 100mb and delete them
 ```
 ```
   > find . -size +100M -type f -delete
@@ -44,7 +44,7 @@ $ s find all files larger than 100mb and delete them
 ### The Flow
 
 ```
-$ s <natural language>
+$ b <natural language>
        │
        ▼
 ┌──────────────────┐     ┌──────────────────┐
@@ -80,13 +80,13 @@ The core feature. Describe what you want, get the command.
 
 ```bash
 # Finding files
-$ s find all javascript files in this project
+$ b find all javascript files in this project
 > find . -name "*.js" -type f
 
-$ s find files modified in the last 24 hours
+$ b find files modified in the last 24 hours
 > find . -type f -mtime -1
 
-$ s find all files larger than 50mb
+$ b find all files larger than 50mb
 > find . -size +50M -type f
 ```
 
@@ -105,7 +105,7 @@ When prompted `Execute? (y/n/e/c/edit)`:
 ### Explain Mode
 
 ```bash
-$ s find files modified in last hour
+$ b find files modified in last hour
 > find . -type f -mmin -60
 
 ? Execute? (y/n/e/c/edit) e
@@ -121,7 +121,7 @@ $ s find files modified in last hour
 ### Edit Mode
 
 ```bash
-$ s find large log files
+$ b find large log files
 > find . -name "*.log" -size +10M
 
 ? Execute? (y/n/e/c/edit) edit
@@ -137,7 +137,7 @@ $ s find large log files
 ### Execution Output
 
 ```bash
-$ s show disk usage by folder
+$ b show disk usage by folder
 > du -sh */ | sort -hr | head -20
 
 ? Execute? (y/n/e/c/edit) y
@@ -163,18 +163,18 @@ Define your own shortcuts for frequently used commands.
 
 ```bash
 # Simple shortcut (no arguments)
-$ s disk
+$ b disk
 > df -h
 
 # Shortcut with arguments
-$ s commit "fixed the navbar bug"
+$ b commit "fixed the navbar bug"
 > git add . && git commit -m "fixed the navbar bug"
 
 # Shortcut with multiple arguments
-$ s logs myapp production
+$ b logs myapp production
 > tail -f ~/projects/myapp/logs/production.log
 
-$ s killport 3000
+$ b killport 3000
 > lsof -ti:3000 | xargs kill -9
 ```
 
@@ -183,7 +183,7 @@ $ s killport 3000
 #### List All Shortcuts
 
 ```bash
-$ s --shortcuts
+$ b --shortcuts
 
   Your Shortcuts
 
@@ -202,7 +202,7 @@ $ s --shortcuts
 #### Add New Shortcut (Interactive)
 
 ```bash
-$ s --add-shortcut
+$ b --add-shortcut
 
 ? Shortcut name: backup
 ? Command template: tar -czvf ~/backups/{{name}}.tar.gz ~/projects/{{name}}
@@ -212,14 +212,14 @@ $ s --add-shortcut
 ✓ Shortcut "backup" added!
 
 # Now you can use it:
-$ s backup myproject
+$ b backup myproject
 > tar -czvf ~/backups/myproject.tar.gz ~/projects/myproject
 ```
 
 #### Add Shortcut (One-liner)
 
 ```bash
-$ s --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
+$ b --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
 
 ✓ Shortcut "killport" added!
 ```
@@ -227,7 +227,7 @@ $ s --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
 #### Remove Shortcut
 
 ```bash
-$ s --remove-shortcut backup
+$ b --remove-shortcut backup
 
 ? Remove shortcut "backup"? Yes
 
@@ -237,8 +237,8 @@ $ s --remove-shortcut backup
 #### Edit Shortcuts (Opens in Editor)
 
 ```bash
-$ s --edit-shortcuts
-# Opens ~/.shellio/shortcuts.json in $EDITOR
+$ b --edit-shortcuts
+# Opens ~/.bashio/shortcuts.json in $EDITOR
 ```
 
 ### Shortcut File Format
@@ -270,16 +270,16 @@ $ s --edit-shortcuts
 
 ```bash
 # If shortcut needs 1 arg and user provides it:
-$ s commit "my message"
+$ b commit "my message"
 > git add . && git commit -m "my message"
 
 # If shortcut needs 1 arg and user doesn't provide it:
-$ s commit
+$ b commit
 ? Enter message: my message
 > git add . && git commit -m "my message"
 
 # Single-arg shortcuts join all remaining words:
-$ s commit fixed the navbar bug
+$ b commit fixed the navbar bug
 > git add . && git commit -m "fixed the navbar bug"
 ```
 
@@ -320,9 +320,9 @@ One-time setup to configure which AI powers your shell agent.
 ### Initial Setup
 
 ```bash
-$ s --auth
+$ b --auth
 
-  Shellio Setup
+  Bashio Setup
 
 ? Select your AI provider:
   > Claude (Anthropic)     - Use Anthropic API key
@@ -349,7 +349,7 @@ $ s --auth
   Provider: Claude
   Model: claude-sonnet-4-20250514
 
-You're all set! Try: s find all png files
+You're all set! Try: b find all png files
 ```
 
 ### OpenAI Setup
@@ -411,7 +411,7 @@ You're all set! Try: s find all png files
 ### Change Model
 
 ```bash
-$ s --model
+$ b --model
 
   Current: Claude / claude-sonnet-4-20250514
 
@@ -426,14 +426,14 @@ $ s --model
 ### View Current Config
 
 ```bash
-$ s --config
+$ b --config
 
-  Shellio Configuration
+  Bashio Configuration
 
   Provider:  claude
   Model:     claude-sonnet-4-20250514
 
-  Config: ~/.shellio/config.json
+  Config: ~/.bashio/config.json
 ```
 
 ---
@@ -445,7 +445,7 @@ Track your command history and learn from patterns.
 ### View History
 
 ```bash
-$ s --history
+$ b --history
 
   Command History
 
@@ -463,7 +463,7 @@ $ s --history
 ### Search History
 
 ```bash
-$ s --history --search "git"
+$ b --history --search "git"
 
   Command History (filtered: "git")
 
@@ -478,7 +478,7 @@ $ s --history --search "git"
 ### Smart Shortcut Suggestions
 
 ```bash
-$ s --suggest-shortcuts
+$ b --suggest-shortcuts
 
   Suggested Shortcuts
 
@@ -496,9 +496,9 @@ The system learns which commands you use frequently and suggests creating shortc
 ### Stats
 
 ```bash
-$ s --stats
+$ b --stats
 
-  Shellio Usage Statistics
+  Bashio Usage Statistics
 
   Overview
   ┌──────────────────────┬───────────────┐
@@ -526,10 +526,10 @@ $ s --stats
 
 ### Dangerous Command Detection
 
-Shellio automatically detects potentially dangerous operations:
+Bashio automatically detects potentially dangerous operations:
 
 ```bash
-$ s delete everything in the home directory
+$ b delete everything in the home directory
 
   > rm -rf ~/*
 
@@ -559,45 +559,45 @@ Every command requires confirmation before execution. You always see exactly wha
 ### Core Commands
 
 ```bash
-s <natural language>              # Convert to command and execute
-s <shortcut> [args]               # Run a shortcut
+b <natural language>              # Convert to command and execute
+b <shortcut> [args]               # Run a shortcut
 ```
 
 ### Configuration
 
 ```bash
-s --auth                          # Setup/change provider
-s --model                         # Change model
-s --config                        # View current configuration
+b --auth                          # Setup/change provider
+b --model                         # Change model
+b --config                        # View current configuration
 ```
 
 ### Shortcuts
 
 ```bash
-s --shortcuts                     # List all shortcuts
-s --add-shortcut                  # Add new shortcut (interactive)
-s --add-shortcut "name" "cmd" args  # Add shortcut (one-liner)
-s --remove-shortcut <name>        # Remove a shortcut
-s --edit-shortcuts                # Edit shortcuts in $EDITOR
+b --shortcuts                     # List all shortcuts
+b --add-shortcut                  # Add new shortcut (interactive)
+b --add-shortcut "name" "cmd" args  # Add shortcut (one-liner)
+b --remove-shortcut <name>        # Remove a shortcut
+b --edit-shortcuts                # Edit shortcuts in $EDITOR
 ```
 
 ### History & Stats
 
 ```bash
-s --history                       # View command history
-s --history --limit N             # Limit to N entries
-s --history --search "query"      # Search history
-s --stats                         # View usage statistics
-s --clear-history --all           # Clear all history
-s --clear-history --older-than N  # Clear entries older than N days
-s --suggest-shortcuts             # Get shortcut suggestions
+b --history                       # View command history
+b --history --limit N             # Limit to N entries
+b --history --search "query"      # Search history
+b --stats                         # View usage statistics
+b --clear-history --all           # Clear all history
+b --clear-history --older-than N  # Clear entries older than N days
+b --suggest-shortcuts             # Get shortcut suggestions
 ```
 
 ### Help
 
 ```bash
-s --help                          # Show help
-s --version                       # Show version
+b --help                          # Show help
+b --version                       # Show version
 ```
 
 ---
@@ -607,7 +607,7 @@ s --version                       # Show version
 ### File Locations
 
 ```
-~/.shellio/
+~/.bashio/
 ├── config.json           # Main configuration
 ├── shortcuts.json        # Custom shortcuts
 └── history.db            # Command history (SQLite)
@@ -653,7 +653,7 @@ s --version                       # Show version
 ```
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                                USER INPUT                                     │
-│                              $ s find large files                             │
+│                              $ b find large files                             │
 └───────────────────────────────────────────────────────────────────────────────┘
                                        │
                                        ▼
@@ -723,7 +723,7 @@ s --version                       # Show version
 ### Directory Structure
 
 ```
-shellio/
+bashio/
 ├── src/
 │   ├── index.ts              # Entry point
 │   ├── cli/

@@ -27,8 +27,8 @@ if (shouldRunCleanup()) {
 }
 
 const cli = new Cli({
-  binaryLabel: 'Shellio',
-  binaryName: 's',
+  binaryLabel: 'Bashio',
+  binaryName: 'b',
   binaryVersion: '0.4.0',
 });
 

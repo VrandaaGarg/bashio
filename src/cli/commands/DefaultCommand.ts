@@ -82,14 +82,14 @@ export class DefaultCommand extends Command {
 
     // Step 2: Not a shortcut, use AI provider
     if (!configExists()) {
-      logger.warn('Shellio is not configured yet.');
-      console.log(pc.gray("Run 's --auth' to set up your AI provider.\n"));
+      logger.warn('Bashio is not configured yet.');
+      console.log(pc.gray("Run 'b --auth' to set up your AI provider.\n"));
       return 1;
     }
 
     if (!config) {
       logger.error('Failed to load configuration.');
-      console.log(pc.gray("Run 's --auth' to reconfigure.\n"));
+      console.log(pc.gray("Run 'b --auth' to reconfigure.\n"));
       return 1;
     }
 
@@ -128,34 +128,34 @@ export class DefaultCommand extends Command {
   }
 
   private showHelp(): void {
-    console.log(pc.bold('\n  Shellio - Natural language to shell commands\n'));
+    console.log(pc.bold('\n  Bashio - Natural language to shell commands\n'));
     console.log('  Usage:');
-    console.log(pc.cyan('    s <natural language query>'));
-    console.log(pc.cyan('    s <shortcut> [arguments]'));
+    console.log(pc.cyan('    b <natural language query>'));
+    console.log(pc.cyan('    b <shortcut> [arguments]'));
     console.log();
     console.log('  Examples:');
-    console.log(pc.gray('    s find all files larger than 100mb'));
-    console.log(pc.gray('    s kill whatever is running on port 3000'));
-    console.log(pc.gray('    s killport 3000') + pc.cyan('  (shortcut)'));
+    console.log(pc.gray('    b find all files larger than 100mb'));
+    console.log(pc.gray('    b kill whatever is running on port 3000'));
+    console.log(pc.gray('    b killport 3000') + pc.cyan('  (shortcut)'));
     console.log();
     console.log('  Commands:');
-    console.log(pc.gray('    s --auth              Configure AI provider'));
+    console.log(pc.gray('    b --auth              Configure AI provider'));
     console.log(
-      pc.gray('    s --config            View current configuration'),
+      pc.gray('    b --config            View current configuration'),
     );
-    console.log(pc.gray('    s --model             Change AI model'));
-    console.log(pc.gray('    s --shortcuts         List all shortcuts'));
-    console.log(pc.gray('    s --add-shortcut      Add a new shortcut'));
-    console.log(pc.gray('    s --remove-shortcut   Remove a shortcut'));
-    console.log(pc.gray('    s --edit-shortcuts    Edit shortcuts in editor'));
+    console.log(pc.gray('    b --model             Change AI model'));
+    console.log(pc.gray('    b --shortcuts         List all shortcuts'));
+    console.log(pc.gray('    b --add-shortcut      Add a new shortcut'));
+    console.log(pc.gray('    b --remove-shortcut   Remove a shortcut'));
+    console.log(pc.gray('    b --edit-shortcuts    Edit shortcuts in editor'));
     console.log();
     console.log('  History & Stats:');
-    console.log(pc.gray('    s --history           View command history'));
-    console.log(pc.gray('    s --stats             View usage statistics'));
-    console.log(pc.gray('    s --clear-history     Clear command history'));
-    console.log(pc.gray('    s --suggest-shortcuts Suggest new shortcuts'));
+    console.log(pc.gray('    b --history           View command history'));
+    console.log(pc.gray('    b --stats             View usage statistics'));
+    console.log(pc.gray('    b --clear-history     Clear command history'));
+    console.log(pc.gray('    b --suggest-shortcuts Suggest new shortcuts'));
     console.log();
-    console.log(pc.gray('    s --help              Show help'));
+    console.log(pc.gray('    b --help              Show help'));
     console.log();
   }
 

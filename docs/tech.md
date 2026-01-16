@@ -1,6 +1,6 @@
-# Shellio - Tech Stack
+# Bashio - Tech Stack
 
-Complete breakdown of technologies used in Shellio.
+Complete breakdown of technologies used in Bashio.
 
 ---
 
@@ -75,7 +75,7 @@ Complete breakdown of technologies used in Shellio.
 import { Cli, Command, Option } from 'clipanion';
 
 const cli = new Cli({
-  binaryLabel: 'Shellio',
+  binaryLabel: 'Bashio',
   binaryName: 's',
   binaryVersion: '0.4.0',
 });
@@ -133,7 +133,7 @@ const provider = await select({
 ```typescript
 import Database from 'better-sqlite3';
 
-const db = new Database('~/.shellio/history.db');
+const db = new Database('~/.bashio/history.db');
 db.pragma('journal_mode = WAL');
 
 // Queries are synchronous (no await needed)
@@ -342,7 +342,7 @@ pnpm typecheck  # Runs: tsc --noEmit
 | **Fast startup** | Minimal dependencies, native ESM, tsup bundling |
 | **Type safety** | TypeScript + Zod (compile-time + runtime) |
 | **Beautiful UX** | picocolors + ora + @inquirer/prompts |
-| **Local-first** | SQLite + JSON files in ~/.shellio/ |
+| **Local-first** | SQLite + JSON files in ~/.bashio/ |
 | **Developer experience** | Biome (fast linting), tsup watch mode |
 | **Portability** | No external services required (except AI APIs) |
 
@@ -351,7 +351,7 @@ pnpm typecheck  # Runs: tsc --noEmit
 ## Dependency Graph
 
 ```
-shellio
+bashio
 ├── Runtime
 │   ├── node (>=22.0.0)
 │   └── typescript (^5.9.3)

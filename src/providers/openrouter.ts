@@ -41,8 +41,8 @@ export class OpenRouterProvider implements AIProvider {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.apiKey}`,
-          'HTTP-Referer': 'https://github.com/shellio',
-          'X-Title': 'Shellio',
+          'HTTP-Referer': 'https://github.com/bashio',
+          'X-Title': 'Bashio',
         },
         body: JSON.stringify({
           model: this.model,

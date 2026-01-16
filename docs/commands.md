@@ -1,6 +1,6 @@
-# Shellio CLI Reference
+# Bashio CLI Reference
 
-Complete reference for all Shellio CLI commands.
+Complete reference for all Bashio CLI commands.
 
 ---
 
@@ -8,35 +8,35 @@ Complete reference for all Shellio CLI commands.
 
 | Command | Description |
 |---------|-------------|
-| `s <query>` | Convert natural language to shell command |
-| `s <shortcut> [args]` | Execute a saved shortcut |
-| `s --auth` | Configure AI provider |
-| `s --config` | View current configuration |
-| `s --model` | Change AI model |
-| `s --shortcuts` | List all shortcuts |
-| `s --add-shortcut` | Add a new shortcut |
-| `s --remove-shortcut <name>` | Remove a shortcut |
-| `s --edit-shortcuts` | Edit shortcuts in editor |
-| `s --history` | View command history |
-| `s --stats` | View usage statistics |
-| `s --clear-history` | Clear command history |
-| `s --suggest-shortcuts` | Get shortcut suggestions |
-| `s --help` | Show help |
-| `s --version` | Show version |
+| `b <query>` | Convert natural language to shell command |
+| `b <shortcut> [args]` | Execute a saved shortcut |
+| `b --auth` | Configure AI provider |
+| `b --config` | View current configuration |
+| `b --model` | Change AI model |
+| `b --shortcuts` | List all shortcuts |
+| `b --add-shortcut` | Add a new shortcut |
+| `b --remove-shortcut <name>` | Remove a shortcut |
+| `b --edit-shortcuts` | Edit shortcuts in editor |
+| `b --history` | View command history |
+| `b --stats` | View usage statistics |
+| `b --clear-history` | Clear command history |
+| `b --suggest-shortcuts` | Get shortcut suggestions |
+| `b --help` | Show help |
+| `b --version` | Show version |
 
 ---
 
 ## Core Commands
 
-### `s <query>` - Natural Language to Command
+### `b <query>` - Natural Language to Command
 
 Convert natural language queries into shell commands.
 
 ```bash
-s find all files larger than 100mb
-s kill whatever is running on port 3000
-s show disk usage sorted by size
-s undo the last git commit
+b find all files larger than 100mb
+b kill whatever is running on port 3000
+b show disk usage sorted by size
+b undo the last git commit
 ```
 
 **Output:**
@@ -58,14 +58,14 @@ When prompted `Execute? (y/n/e/c/edit)`:
 | `c` | Copy command to clipboard |
 | `edit` | Open in editor to modify before executing |
 
-### `s <shortcut> [args]` - Run Shortcuts
+### `b <shortcut> [args]` - Run Shortcuts
 
 Execute saved shortcuts with optional arguments.
 
 ```bash
-s killport 3000
-s commit "my commit message"
-s dev myproject
+b killport 3000
+b commit "my commit message"
+b dev myproject
 ```
 
 **Output:**
@@ -80,12 +80,12 @@ s dev myproject
 
 ## Configuration Commands
 
-### `s --auth`
+### `b --auth`
 
 Configure AI provider and credentials. Interactive setup wizard.
 
 ```bash
-s --auth
+b --auth
 ```
 
 **Supported Providers:**
@@ -102,32 +102,32 @@ s --auth
 2. Enter API key (or configure local host for Ollama)
 3. Select model
 4. Credentials validated automatically
-5. Configuration saved to `~/.shellio/config.json`
+5. Configuration saved to `~/.bashio/config.json`
 
-### `s --config`
+### `b --config`
 
 View current configuration.
 
 ```bash
-s --config
+b --config
 ```
 
 **Output:**
 ```
-  Shellio Configuration
+  Bashio Configuration
 
   Provider:  claude
   Model:     claude-sonnet-4-20250514
 
-  Config: ~/.shellio/config.json
+  Config: ~/.bashio/config.json
 ```
 
-### `s --model`
+### `b --model`
 
 Change AI model within current provider.
 
 ```bash
-s --model
+b --model
 ```
 
 Opens interactive model selector showing available models for your configured provider.
@@ -136,12 +136,12 @@ Opens interactive model selector showing available models for your configured pr
 
 ## Shortcuts Commands
 
-### `s --shortcuts`
+### `b --shortcuts`
 
 List all configured shortcuts in a table format.
 
 ```bash
-s --shortcuts
+b --shortcuts
 ```
 
 **Output:**
@@ -159,13 +159,13 @@ s --shortcuts
   Total: 3 shortcuts
 ```
 
-### `s --add-shortcut`
+### `b --add-shortcut`
 
 Add a new shortcut.
 
 **Interactive mode:**
 ```bash
-s --add-shortcut
+b --add-shortcut
 ```
 
 Prompts for:
@@ -176,55 +176,55 @@ Prompts for:
 
 **One-liner mode:**
 ```bash
-s --add-shortcut <name> "<template>" [args...]
+b --add-shortcut <name> "<template>" [args...]
 ```
 
 **Examples:**
 ```bash
 # No arguments
-s --add-shortcut disk "df -h"
+b --add-shortcut disk "df -h"
 
 # Single argument
-s --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
+b --add-shortcut killport "lsof -ti:{{port}} | xargs kill -9" port
 
 # Multiple arguments
-s --add-shortcut deploy "cd ~/projects/{{project}} && git push {{remote}}" project remote
+b --add-shortcut deploy "cd ~/projects/{{project}} && git push {{remote}}" project remote
 ```
 
-### `s --remove-shortcut <name>`
+### `b --remove-shortcut <name>`
 
 Remove a shortcut by name.
 
 ```bash
-s --remove-shortcut killport
+b --remove-shortcut killport
 ```
 
 Asks for confirmation before removing.
 
-### `s --edit-shortcuts`
+### `b --edit-shortcuts`
 
 Open shortcuts file in your default editor.
 
 ```bash
-s --edit-shortcuts
+b --edit-shortcuts
 ```
 
-Opens `~/.shellio/shortcuts.json` in `$EDITOR` (falls back to nano/notepad).
+Opens `~/.bashio/shortcuts.json` in `$EDITOR` (falls back to nano/notepad).
 
 ---
 
 ## History & Statistics Commands
 
-### `s --history`
+### `b --history`
 
 View command history in a table format.
 
 ```bash
-s --history                    # View recent 20 entries
-s --history --limit 50         # View more entries
-s --history -l 10              # Short form
-s --history --search git       # Search history
-s --history -s commit          # Short form search
+b --history                    # View recent 20 entries
+b --history --limit 50         # View more entries
+b --history -l 10              # Short form
+b --history --search git       # Search history
+b --history -s commit          # Short form search
 ```
 
 **Options:**
@@ -254,17 +254,17 @@ s --history -s commit          # Short form search
 - `✗ exit:N` - Command failed with exit code N
 - `○` - Command was not executed (skipped)
 
-### `s --stats`
+### `b --stats`
 
 View usage statistics.
 
 ```bash
-s --stats
+b --stats
 ```
 
 **Output:**
 ```
-  Shellio Usage Statistics
+  Bashio Usage Statistics
 
   Overview
   ┌──────────────────────┬───────────────┐
@@ -294,15 +294,15 @@ s --stats
   └───┴─────────────────────────────────┴──────┴──────────┘
 ```
 
-### `s --clear-history`
+### `b --clear-history`
 
 Clear command history.
 
 ```bash
-s --clear-history --all           # Clear all history (with confirmation)
-s --clear-history -a              # Short form
-s --clear-history --older-than 7  # Clear entries older than 7 days
-s --clear-history -o 30           # Short form
+b --clear-history --all           # Clear all history (with confirmation)
+b --clear-history -a              # Short form
+b --clear-history --older-than 7  # Clear entries older than 7 days
+b --clear-history -o 30           # Short form
 ```
 
 **Options:**
@@ -312,14 +312,14 @@ s --clear-history -o 30           # Short form
 | `--all` | `-a` | Clear all history entries |
 | `--older-than` | `-o` | Clear entries older than N days |
 
-### `s --suggest-shortcuts`
+### `b --suggest-shortcuts`
 
 Get personalized shortcut suggestions based on frequently used commands.
 
 ```bash
-s --suggest-shortcuts              # Default threshold: 3+ uses
-s --suggest-shortcuts --threshold 5  # Higher threshold
-s --suggest-shortcuts -t 2         # Lower threshold
+b --suggest-shortcuts              # Default threshold: 3+ uses
+b --suggest-shortcuts --threshold 5  # Higher threshold
+b --suggest-shortcuts -t 2         # Lower threshold
 ```
 
 **Options:**
@@ -350,27 +350,27 @@ s --suggest-shortcuts -t 2         # Lower threshold
 
 ## Utility Commands
 
-### `s --help`
+### `b --help`
 
 Show help with all available commands.
 
 ```bash
-s --help
+b --help
 ```
 
-### `s --version`
+### `b --version`
 
-Show Shellio version.
+Show Bashio version.
 
 ```bash
-s --version
+b --version
 ```
 
 ---
 
 ## Configuration Files
 
-All configuration stored in `~/.shellio/`:
+All configuration stored in `~/.bashio/`:
 
 | File | Purpose |
 |------|---------|
@@ -380,7 +380,7 @@ All configuration stored in `~/.shellio/`:
 
 ### Settings in config.json
 
-Customizable settings in `~/.shellio/config.json`:
+Customizable settings in `~/.bashio/config.json`:
 
 ```json
 {
@@ -413,7 +413,7 @@ Customizable settings in `~/.shellio/config.json`:
 
 ## Shortcut File Format
 
-Example `~/.shellio/shortcuts.json`:
+Example `~/.bashio/shortcuts.json`:
 
 ```json
 {
@@ -444,15 +444,15 @@ Use `{{name}}` for dynamic arguments in templates.
 
 **Single argument shortcut:**
 ```bash
-s killport 3000
+b killport 3000
 # Expands to: lsof -ti:3000 | xargs kill -9
 ```
 
 **Multi-word single argument:**
 ```bash
-s commit "fixed the navbar bug"
+b commit "fixed the navbar bug"
 # Expands to: git add . && git commit -m "fixed the navbar bug"
 ```
 
 **Missing arguments:**
-If required arguments aren't provided, Shellio prompts for them interactively.
+If required arguments aren't provided, Bashio prompts for them interactively.

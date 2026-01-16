@@ -1,4 +1,4 @@
-# Shellio - Project Overview
+# Bashio - Project Overview
 
 ## One-Liner
 
@@ -32,7 +32,7 @@ A CLI tool that:
 4. Executes it
 
 ```bash
-$ s find all files larger than 100mb
+$ b find all files larger than 100mb
 ```
 ```
   > find . -size +100M -type f
@@ -84,15 +84,15 @@ User-defined command templates with argument placeholders.
 
 | User Types | Result |
 |------------|--------|
-| `s commit "fixed bug"` | `git add . && git commit -m "fixed bug"` |
-| `s killport 3000` | `lsof -ti:3000 \| xargs kill -9` |
-| `s dev myapp` | `cd ~/projects/myapp && npm run dev` |
+| `b commit "fixed bug"` | `git add . && git commit -m "fixed bug"` |
+| `b killport 3000` | `lsof -ti:3000 \| xargs kill -9` |
+| `b dev myapp` | `cd ~/projects/myapp && npm run dev` |
 
 **Management:**
-- `s --shortcuts` - List all
-- `s --add-shortcut` - Add new (interactive or one-liner)
-- `s --remove-shortcut <name>` - Remove
-- `s --edit-shortcuts` - Open in editor
+- `b --shortcuts` - List all
+- `b --add-shortcut` - Add new (interactive or one-liner)
+- `b --remove-shortcut <name>` - Remove
+- `b --edit-shortcuts` - Open in editor
 
 ### 3. Multi-Provider Support
 
@@ -106,8 +106,8 @@ Use your preferred AI provider.
 | OpenRouter | API Key | Pay per use |
 
 **Setup:**
-- `s --auth` - One-time provider setup
-- `s --model` - Change model within provider
+- `b --auth` - One-time provider setup
+- `b --model` - Change model within provider
 
 ### 4. History & Learning
 
@@ -117,11 +117,11 @@ Track what commands you use. Enable pattern detection and suggestions.
 
 | Command | Purpose |
 |---------|---------|
-| `s --history` | Show recent commands |
-| `s --history --search "git"` | Search history |
-| `s --stats` | Usage statistics |
-| `s --suggest-shortcuts` | Get shortcut suggestions based on usage |
-| `s --clear-history` | Clear history |
+| `b --history` | Show recent commands |
+| `b --history --search "git"` | Search history |
+| `b --stats` | Usage statistics |
+| `b --suggest-shortcuts` | Get shortcut suggestions based on usage |
+| `b --clear-history` | Clear history |
 
 **Smart suggestions:**
 - System tracks frequently used commands
@@ -186,7 +186,7 @@ Track what commands you use. Enable pattern detection and suggestions.
 
 ## Data Storage
 
-All user data stored locally in `~/.shellio/`:
+All user data stored locally in `~/.bashio/`:
 
 | File | Format | Purpose |
 |------|--------|---------|
@@ -213,7 +213,7 @@ All user data stored locally in `~/.shellio/`:
 
 ## Competitive Advantage
 
-| Feature | Others | Shellio |
+| Feature | Others | Bashio |
 |---------|--------|-------------|
 | Custom shortcuts | None | First-class feature |
 | Multi-provider | Some | Claude, OpenAI, Ollama, OpenRouter |
@@ -236,7 +236,7 @@ All user data stored locally in `~/.shellio/`:
 
 ## Summary
 
-**Shellio** is a local CLI tool that converts natural language to shell commands.
+**Bashio** is a local CLI tool that converts natural language to shell commands.
 
 **Key differentiators:**
 - Custom shortcuts with placeholders

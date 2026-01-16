@@ -1,15 +1,15 @@
-# Shellio - Implementation Guide
+# Bashio - Implementation Guide
 
 ## Overview
 
-Shellio is a CLI tool that converts natural language to shell commands. This document explains the implementation architecture and core components.
+Bashio is a CLI tool that converts natural language to shell commands. This document explains the implementation architecture and core components.
 
 ---
 
 ## Project Structure
 
 ```
-shellio/
+bashio/
 ├── src/
 │   ├── index.ts              # Entry point (runs CLI)
 │   ├── cli/
@@ -89,7 +89,7 @@ if (shouldRunCleanup()) {
 }
 
 const cli = new Cli({
-  binaryLabel: 'Shellio',
+  binaryLabel: 'Bashio',
   binaryName: 's',
   binaryVersion: '0.4.0',
 });
@@ -105,10 +105,10 @@ export { cli };
 
 ### 3. Config Management (`src/core/config.ts`)
 
-Manages `~/.shellio/config.json`:
+Manages `~/.bashio/config.json`:
 
 ```typescript
-const CONFIG_DIR = join(homedir(), '.shellio');
+const CONFIG_DIR = join(homedir(), '.bashio');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 export function ensureConfigDir(): void {
@@ -409,12 +409,12 @@ export function detectDangerousShellCommand(command: string): DangerResult | nul
 ## User Flow
 
 ```
-$ s find large files
+$ b find large files
 
 1. Parse query via Clipanion
 2. Check shortcuts.json for "find" shortcut
    → Not found, continue to AI
-3. Load config from ~/.shellio/config.json
+3. Load config from ~/.bashio/config.json
 4. Create AI provider instance (Claude/OpenAI/etc)
 5. Show spinner "Generating command..."
 6. Call AI API with query
@@ -455,7 +455,7 @@ node dist/index.js find large files
 pnpm link --global
 
 # Now use anywhere
-s find all png files
+b find all png files
 ```
 
 ---

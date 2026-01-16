@@ -14,7 +14,7 @@ This file contains rules and guidelines for AI agents working on this codebase.
 - **No hardcoded API keys, tokens, or secrets in code** - Ever
 - All sensitive data must come from:
   - Environment variables (`.env` files)
-  - User config files (`~/.shellio/config.json`)
+  - User config files (`~/.bashio/config.json`)
 - **Never use fallback values for secrets** - If a secret is missing, throw an error
 - Config files containing secrets are stored in user's home directory, not in the repo
 - Ensure `.gitignore` excludes all sensitive files before any changes
@@ -39,5 +39,5 @@ This file contains rules and guidelines for AI agents working on this codebase.
 ## Git Safety
 
 - Never commit `.env` files or any file containing secrets
-- Never commit `~/.shellio/` config files
+- Never commit `~/.bashio/` config files
 - Review changes before suggesting commits

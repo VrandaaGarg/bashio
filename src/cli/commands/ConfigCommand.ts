@@ -7,14 +7,14 @@ export class ConfigCommand extends Command {
   static paths = [['config'], ['--config']];
 
   static usage = Command.Usage({
-    description: 'View current Shellio configuration',
+    description: 'View current Bashio configuration',
     examples: [['View config', '$0 --config']],
   });
 
   async execute(): Promise<number> {
     if (!configExists()) {
-      logger.warn('Shellio is not configured yet.');
-      console.log(pc.gray("Run 's --auth' to set up your AI provider.\n"));
+      logger.warn('Bashio is not configured yet.');
+      console.log(pc.gray("Run 'b --auth' to set up your AI provider.\n"));
       return 1;
     }
 
@@ -24,7 +24,7 @@ export class ConfigCommand extends Command {
       return 1;
     }
 
-    console.log(pc.bold('\n  Shellio Configuration\n'));
+    console.log(pc.bold('\n  Bashio Configuration\n'));
     console.log(`  Provider:    ${pc.cyan(config.provider)}`);
     console.log(`  Model:       ${pc.cyan(config.model)}`);
     console.log(`  Auth:        ${pc.green('Configured')}`);

@@ -1,5 +1,5 @@
 {
-  "name": "shellio",
+  "name": "bashio",
   "version": "0.4.0",
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -15,7 +15,7 @@
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
-    "s": "./dist/index.js"
+    "b": "./dist/index.js"
   },
   "scripts": {
     "dev": "tsup --watch",
@@ -38,11 +38,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/VrandaaGarg/shellio"
+    "url": "https://github.com/VrandaaGarg/bashio"
   },
-  "homepage": "https://github.com/VrandaaGarg/shellio#readme",
+  "homepage": "https://github.com/VrandaaGarg/bashio#readme",
   "bugs": {
-    "url": "https://github.com/VrandaaGarg/shellio/issues"
+    "url": "https://github.com/VrandaaGarg/bashio/issues"
   },
   "license": "MIT",
   "packageManager": "pnpm@10.17.1",
