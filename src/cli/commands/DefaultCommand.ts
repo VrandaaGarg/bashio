@@ -1,4 +1,5 @@
-import { confirm, editor, input } from '@inquirer/prompts';
+import * as readline from 'node:readline';
+import { confirm, input } from '@inquirer/prompts';
 import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { configExists, loadConfig } from '../../core/config.js';
@@ -205,11 +206,7 @@ export class DefaultCommand extends Command {
         }
       } else if (action === 'edit') {
         try {
-          const edited = await editor({
-            message: 'Edit command:',
-            default: currentCommand,
-            waitForUserInput: false,
-          });
+          const edited = await this.editCommandInline(currentCommand);
           currentCommand = edited.trim();
           console.log();
           logger.command(currentCommand);
@@ -251,13 +248,15 @@ export class DefaultCommand extends Command {
       }
     }
 
-    console.log(pc.gray('\n  Executing...\n'));
-    console.log(pc.gray('─'.repeat(50)));
+    console.log();
 
     const result = await executeCommand(currentCommand);
 
-    console.log(pc.gray('─'.repeat(50)));
-    logger.exitCode(result.exitCode);
+    // Only show exit code if command failed
+    if (result.exitCode !== 0) {
+      console.log();
+      logger.exitCode(result.exitCode);
+    }
     console.log();
 
     // Update history with execution result
@@ -293,12 +292,14 @@ export class DefaultCommand extends Command {
     }
 
     console.log();
-    console.log(pc.gray('─'.repeat(50)));
 
     const result = await executeCommand(command);
 
-    console.log(pc.gray('─'.repeat(50)));
-    logger.exitCode(result.exitCode);
+    // Only show exit code if command failed
+    if (result.exitCode !== 0) {
+      console.log();
+      logger.exitCode(result.exitCode);
+    }
     console.log();
 
     // Update history with execution result
@@ -370,6 +371,35 @@ export class DefaultCommand extends Command {
     return confirm({
       message: 'Proceed with this command?',
       default: false,
+    });
+  }
+
+  private editCommandInline(currentCommand: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+      });
+
+      // Show the prompt
+      process.stdout.write(`${pc.green('?')} ${pc.bold('Edit command:')} `);
+
+      // Pre-fill the input with current command
+      rl.write(currentCommand);
+
+      rl.on('line', (answer) => {
+        rl.close();
+        resolve(answer || currentCommand);
+      });
+
+      rl.on('close', () => {
+        resolve(currentCommand);
+      });
+
+      rl.on('SIGINT', () => {
+        rl.close();
+        reject(new Error('Edit cancelled'));
+      });
     });
   }
 }
