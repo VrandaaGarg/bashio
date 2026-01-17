@@ -202,7 +202,7 @@ All user data stored locally in `~/.bashio/`:
 
 | Category | Technology |
 |----------|------------|
-| Runtime | Node.js 22+, TypeScript 5.9 |
+| Runtime | Node.js 20.12+, TypeScript 5.9 |
 | CLI Framework | Clipanion |
 | Database | better-sqlite3 (SQLite) |
 | Validation | Zod |

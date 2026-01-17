@@ -13,7 +13,7 @@ Complete breakdown of technologies used in Bashio.
 │                                                                         │
 │  RUNTIME            │  FRAMEWORK          │  DATA                       │
 │  ─────────          │  ──────────         │  ────                       │
-│  Node.js 22+        │  Clipanion (CLI)    │  better-sqlite3 (DB)       │
+│  Node.js 20.12+     │  Clipanion (CLI)    │  better-sqlite3 (DB)       │
 │  TypeScript 5.9     │  @inquirer/prompts  │  Zod (validation)          │
 │  ESM Modules        │  (interactive UI)   │  JSON files (config)       │
 │                     │                     │                             │
@@ -32,11 +32,11 @@ Complete breakdown of technologies used in Bashio.
 
 ## Core Runtime & Language
 
-### Node.js (>=22.0.0)
+### Node.js (>=20.12.0)
 
 **Purpose:** JavaScript runtime for executing the CLI
 
-**Why Node.js 22+?**
+**Why Node.js 20.12+?**
 - Native ESM support without hacks
 - Better performance
 - Modern JavaScript features built-in
@@ -353,7 +353,7 @@ pnpm typecheck  # Runs: tsc --noEmit
 ```
 bashio
 ├── Runtime
-│   ├── node (>=22.0.0)
+│   ├── node (>=20.12.0)
 │   └── typescript (^5.9.3)
 │
 ├── CLI Framework
