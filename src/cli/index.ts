@@ -1,4 +1,5 @@
 import { Builtins, Cli } from 'clipanion';
+import pc from 'picocolors';
 import updateNotifier from 'update-notifier';
 import { loadConfig } from '../core/config.js';
 import { initDatabase } from '../core/database.js';
@@ -6,7 +7,7 @@ import { cleanupHistory, shouldRunCleanup } from '../core/history.js';
 
 const pkg = {
   name: 'bashio',
-  version: '0.6.0',
+  version: '0.7.0',
 };
 
 // Check for updates (runs in background, cached for 1 day)
@@ -15,20 +16,37 @@ const notifier = updateNotifier({
   updateCheckInterval: 1000 * 60 * 60 * 24, // 1 day
 });
 
-// Show update notification if available
-notifier.notify({
-  message:
-    'Bashio update available: {currentVersion} → {latestVersion}\n' +
-    'Run: {updateCommand}',
-  boxenOptions: {
-    padding: 1,
-    margin: 1,
-    borderStyle: 'round',
-    borderColor: 'cyan',
-    title: '✨ Update Available',
-    titleAlignment: 'center',
-  },
-});
+// Custom update notification matching welcome banner theme
+if (notifier.update) {
+  const { current, latest } = notifier.update;
+  const cyan = pc.cyan;
+  const width = 44;
+
+  const ansiRegex = new RegExp(
+    `${String.fromCharCode(27)}\\[[0-9;]*[a-zA-Z]`,
+    'g',
+  );
+  const stripAnsi = (str: string): string => str.replace(ansiRegex, '');
+  const visibleLength = (str: string): number => stripAnsi(str).length;
+  const pad = (text: string, len: number): string => {
+    const padding = len - visibleLength(text);
+    return text + ' '.repeat(Math.max(0, padding));
+  };
+  const line = (content: string): string =>
+    cyan('  │') + pad(content, width) + cyan('│');
+
+  console.log();
+  console.log(cyan(`  ┌${'─'.repeat(width)}┐`));
+  console.log(line(''));
+  console.log(line(pc.bold('     Bashio Update Available!')));
+  console.log(line(''));
+  console.log(line(`   ${pc.dim(current)} → ${pc.green(pc.bold(latest))}`));
+  console.log(line(''));
+  console.log(line(`   Run: ${pc.cyan('npm i -g bashio@latest')}`));
+  console.log(line(''));
+  console.log(cyan(`  └${'─'.repeat(width)}┘`));
+  console.log();
+}
 
 import { AddShortcutCommand } from './commands/AddShortcutCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
