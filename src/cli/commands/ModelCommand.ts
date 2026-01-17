@@ -2,7 +2,9 @@ import * as readline from 'node:readline';
 import { select } from '@inquirer/prompts';
 import { Command } from 'clipanion';
 import pc from 'picocolors';
+import { PROVIDER_DISPLAY_NAMES } from '../../core/auth.js';
 import { configExists, loadConfig, saveConfig } from '../../core/config.js';
+import type { ConfigV2, ProviderName } from '../../core/types.js';
 import {
   CHATGPT_SUBSCRIPTION_MODELS,
   CLAUDE_MODELS,
@@ -16,9 +18,7 @@ import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
 
 type SelectConfig<Value> = Parameters<typeof select<Value>>[0];
-
 type KeypressHandler = (input: string, key: readline.Key) => void;
-
 type KeypressInput = NodeJS.ReadStream & {
   on(event: 'keypress', listener: KeypressHandler): void;
   off(event: 'keypress', listener: KeypressHandler): void;
@@ -64,23 +64,45 @@ const selectWithEsc = async <Value>(
 };
 
 const isPromptExit = (error: unknown): boolean => {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
+  if (!(error instanceof Error)) return false;
   return (
     error.name === 'ExitPromptError' ||
     error.name === 'AbortPromptError' ||
-    error.name === 'CancelPromptError'
+    error.name === 'CancelPromptError' ||
+    error.message.includes('SIGINT') ||
+    error.message.includes('force closed')
   );
 };
+
+function getModelsForProvider(
+  provider: ProviderName,
+): Array<{ value: string; label: string }> {
+  switch (provider) {
+    case 'claude':
+      return CLAUDE_MODELS;
+    case 'claude-subscription':
+      return CLAUDE_SUBSCRIPTION_MODELS;
+    case 'openai':
+      return OPENAI_MODELS;
+    case 'chatgpt-subscription':
+      return CHATGPT_SUBSCRIPTION_MODELS;
+    case 'copilot':
+      return COPILOT_MODELS;
+    case 'openrouter':
+      return OPENROUTER_MODELS;
+    case 'ollama':
+      return []; // Handled separately
+    default:
+      return [];
+  }
+}
 
 export class ModelCommand extends Command {
   static paths = [['model'], ['--model']];
 
   static usage = Command.Usage({
-    description: 'Change the AI model for current provider',
-    examples: [['Change model', '$0 --model']],
+    description: 'Change the AI provider and model',
+    examples: [['Change provider/model', '$0 --model']],
   });
 
   async execute(): Promise<number> {
@@ -98,118 +120,122 @@ export class ModelCommand extends Command {
       return 1;
     }
 
-    console.log(pc.bold('\n  Change AI Model\n'));
-    console.log(pc.gray(`  Current provider: ${config.provider}`));
-    console.log(pc.gray(`  Current model: ${config.model}`));
+    const configuredProviders = Object.keys(config.providers) as ProviderName[];
+
+    if (configuredProviders.length === 0) {
+      logger.warn('No providers configured.');
+      console.log(pc.gray("Run 'b --auth' to set up a provider.\n"));
+      return 1;
+    }
+
+    const activeSettings = config.providers[config.activeProvider];
+    console.log(pc.bold('\n  Change Provider & Model\n'));
+    console.log(
+      pc.gray(
+        `  Current: ${PROVIDER_DISPLAY_NAMES[config.activeProvider]} / ${activeSettings?.model}`,
+      ),
+    );
     console.log(pc.dim('  Press Esc to cancel\n'));
 
-    let newModel: string;
-
     try {
-      switch (config.provider) {
-        case 'claude': {
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: CLAUDE_MODELS.map((m) => ({
-              value: m.value,
-              name: m.label,
-            })),
-            default: config.model,
-          });
-          break;
-        }
+      // Step 1: Select provider (show configured providers with their models)
+      const providerChoices = configuredProviders.map((p) => {
+        const settings = config.providers[p];
+        const isActive = p === config.activeProvider;
+        const marker = isActive ? pc.green('●') : pc.dim('○');
+        const name = `${marker} ${PROVIDER_DISPLAY_NAMES[p]}`;
+        const description = settings?.model || 'Not configured';
+        return { value: p, name, description };
+      });
 
-        case 'openai': {
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: OPENAI_MODELS.map((m) => ({
-              value: m.value,
-              name: m.label,
-            })),
-            default: config.model,
-          });
-          break;
-        }
+      // Add option to configure new provider
+      providerChoices.push({
+        value: '__add_new__' as ProviderName,
+        name: pc.cyan('+ Add new provider...'),
+        description: 'Configure a new AI provider',
+      });
 
-        case 'ollama': {
-          const host =
-            config.credentials.type === 'local'
-              ? config.credentials.host
-              : 'http://localhost:11434';
+      const selectedProvider = await selectWithEsc<
+        ProviderName | '__add_new__'
+      >({
+        message: 'Select provider:',
+        choices: providerChoices,
+      });
 
-          const spinner = createSpinner('Fetching available models...').start();
-          const availableModels = await OllamaProvider.getAvailableModels(host);
-          spinner.stop();
-
-          if (availableModels.length === 0) {
-            logger.warn('No models found. Make sure Ollama is running.');
-            console.log(pc.gray('\n  Install a model: ollama pull llama3.2\n'));
-            return 1;
-          }
-
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: availableModels.map((m) => ({
-              value: m,
-              name: m,
-            })),
-            default: config.model,
-          });
-          break;
-        }
-
-        case 'openrouter': {
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: OPENROUTER_MODELS.map((m) => ({
-              value: m.value,
-              name: m.label,
-            })),
-            default: config.model,
-          });
-          break;
-        }
-
-        case 'claude-subscription': {
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: CLAUDE_SUBSCRIPTION_MODELS.map((m) => ({
-              value: m.value,
-              name: m.label,
-            })),
-            default: config.model,
-          });
-          break;
-        }
-
-        case 'chatgpt-subscription': {
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: CHATGPT_SUBSCRIPTION_MODELS.map((m) => ({
-              value: m.value,
-              name: m.label,
-            })),
-            default: config.model,
-          });
-          break;
-        }
-
-        case 'copilot': {
-          newModel = await selectWithEsc<string>({
-            message: 'Select new model:',
-            choices: COPILOT_MODELS.map((m) => ({
-              value: m.value,
-              name: m.label,
-            })),
-            default: config.model,
-          });
-          break;
-        }
-
-        default:
-          logger.error(`Unknown provider: ${config.provider}`);
-          return 1;
+      if (selectedProvider === '__add_new__') {
+        console.log(pc.dim("\n  Run 'b --auth' to add a new provider.\n"));
+        return 0;
       }
+
+      // Step 2: Select model for the chosen provider
+      const currentModel = config.providers[selectedProvider]?.model;
+      let newModel: string;
+
+      if (selectedProvider === 'ollama') {
+        const host =
+          config.providers.ollama?.credentials.type === 'local'
+            ? config.providers.ollama.credentials.host
+            : 'http://localhost:11434';
+
+        const spinner = createSpinner('Fetching available models...').start();
+        const availableModels = await OllamaProvider.getAvailableModels(host);
+        spinner.stop();
+
+        if (availableModels.length === 0) {
+          logger.warn('No models found. Make sure Ollama is running.');
+          console.log(pc.gray('\n  Install a model: ollama pull llama3.2\n'));
+          return 1;
+        }
+
+        newModel = await selectWithEsc<string>({
+          message: 'Select model:',
+          choices: availableModels.map((m) => ({ value: m, name: m })),
+          default: currentModel,
+        });
+      } else {
+        const models = getModelsForProvider(selectedProvider);
+        newModel = await selectWithEsc<string>({
+          message: 'Select model:',
+          choices: models.map((m) => ({ value: m.value, name: m.label })),
+          default: currentModel,
+        });
+      }
+
+      // Update config
+      const providerSettings = config.providers[selectedProvider];
+      if (!providerSettings) {
+        logger.error('Provider not configured.');
+        return 1;
+      }
+
+      const updatedConfig: ConfigV2 = {
+        ...config,
+        activeProvider: selectedProvider,
+        providers: {
+          ...config.providers,
+          [selectedProvider]: {
+            ...providerSettings,
+            model: newModel,
+          },
+        },
+      };
+
+      saveConfig(updatedConfig);
+
+      const changed =
+        selectedProvider !== config.activeProvider || newModel !== currentModel;
+
+      if (changed) {
+        console.log();
+        logger.success(
+          `Switched to: ${PROVIDER_DISPLAY_NAMES[selectedProvider]} / ${newModel}`,
+        );
+      } else {
+        logger.info('No changes made.');
+      }
+      console.log();
+
+      return 0;
     } catch (error) {
       if (isPromptExit(error)) {
         console.log(pc.dim('\n  Cancelled.\n'));
@@ -217,19 +243,5 @@ export class ModelCommand extends Command {
       }
       throw error;
     }
-
-    if (newModel === config.model) {
-      logger.info('Model unchanged.');
-      return 0;
-    }
-
-    config.model = newModel;
-    saveConfig(config);
-
-    console.log();
-    logger.success(`Model changed to: ${newModel}`);
-    console.log();
-
-    return 0;
   }
 }

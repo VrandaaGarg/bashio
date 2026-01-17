@@ -88,19 +88,21 @@ export class ChatGPTSubscriptionProvider implements AIProvider {
 
         // Update stored config with new tokens
         const currentConfig = loadConfig();
+        const providerSettings =
+          currentConfig?.providers['chatgpt-subscription'];
         if (
           currentConfig &&
-          currentConfig.credentials.type === 'chatgpt_subscription'
+          providerSettings?.credentials.type === 'chatgpt_subscription'
         ) {
-          currentConfig.credentials.accessToken = newTokens.accessToken;
+          providerSettings.credentials.accessToken = newTokens.accessToken;
           if (newTokens.refreshToken) {
-            currentConfig.credentials.refreshToken = newTokens.refreshToken;
+            providerSettings.credentials.refreshToken = newTokens.refreshToken;
           }
           if (newTokens.expiresAt) {
-            currentConfig.credentials.expiresAt = newTokens.expiresAt;
+            providerSettings.credentials.expiresAt = newTokens.expiresAt;
           }
           if (this.accountId) {
-            currentConfig.credentials.accountId = this.accountId;
+            providerSettings.credentials.accountId = this.accountId;
           }
           saveConfig(currentConfig);
         }

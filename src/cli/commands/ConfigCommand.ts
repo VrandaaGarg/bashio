@@ -1,6 +1,8 @@
 import { Command } from 'clipanion';
 import pc from 'picocolors';
+import { PROVIDER_DISPLAY_NAMES } from '../../core/auth.js';
 import { configExists, getConfigPath, loadConfig } from '../../core/config.js';
+import type { ProviderName } from '../../core/types.js';
 import { logger } from '../../utils/logger.js';
 
 export class ConfigCommand extends Command {
@@ -24,17 +26,37 @@ export class ConfigCommand extends Command {
       return 1;
     }
 
+    const activeSettings = config.providers[config.activeProvider];
+    const configuredProviders = Object.keys(config.providers) as ProviderName[];
+
     console.log(pc.bold('\n  Bashio Configuration\n'));
-    console.log(`  Provider:    ${pc.cyan(config.provider)}`);
-    console.log(`  Model:       ${pc.cyan(config.model)}`);
-    console.log(`  Auth:        ${pc.green('Configured')}`);
+    console.log(
+      `  Active Provider: ${pc.cyan(PROVIDER_DISPLAY_NAMES[config.activeProvider])}`,
+    );
+    console.log(
+      `  Model:           ${pc.cyan(activeSettings?.model || 'N/A')}`,
+    );
+
+    // Show all configured providers
+    if (configuredProviders.length > 1) {
+      console.log();
+      console.log(pc.bold('  Configured Providers'));
+      for (const p of configuredProviders) {
+        const settings = config.providers[p];
+        const isActive = p === config.activeProvider;
+        const marker = isActive ? pc.green('●') : pc.dim('○');
+        console.log(
+          `  ${marker} ${PROVIDER_DISPLAY_NAMES[p]} - ${pc.dim(settings?.model || 'N/A')}`,
+        );
+      }
+    }
 
     // Settings section
     const settings = config.settings;
     console.log();
     console.log(pc.bold('  Settings'));
     console.log(
-      `  History:              ${settings?.historyEnabled !== false ? pc.green('enabled') : pc.gray('disabled')}`,
+      `  History:                ${settings?.historyEnabled !== false ? pc.green('enabled') : pc.gray('disabled')}`,
     );
     console.log(
       `  Auto-confirm shortcuts: ${settings?.autoConfirmShortcuts ? pc.green('enabled') : pc.gray('disabled')}`,

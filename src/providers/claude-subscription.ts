@@ -53,13 +53,15 @@ export class ClaudeSubscriptionProvider implements AIProvider {
 
         // Update stored config with new tokens
         const currentConfig = loadConfig();
+        const providerSettings =
+          currentConfig?.providers['claude-subscription'];
         if (
           currentConfig &&
-          currentConfig.credentials.type === 'claude_subscription'
+          providerSettings?.credentials.type === 'claude_subscription'
         ) {
-          currentConfig.credentials.accessToken = newTokens.accessToken;
-          currentConfig.credentials.refreshToken = newTokens.refreshToken;
-          currentConfig.credentials.expiresAt = newTokens.expiresAt;
+          providerSettings.credentials.accessToken = newTokens.accessToken;
+          providerSettings.credentials.refreshToken = newTokens.refreshToken;
+          providerSettings.credentials.expiresAt = newTokens.expiresAt;
           saveConfig(currentConfig);
         }
       } catch (error) {

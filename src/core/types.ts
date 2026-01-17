@@ -69,13 +69,36 @@ export const Settings = z.object({
 });
 export type Settings = z.infer<typeof Settings>;
 
-export const Config = z.object({
-  version: z.number().default(1),
+// V1 Config (legacy, for migration)
+export const ConfigV1 = z.object({
+  version: z.literal(1).default(1),
   provider: ProviderName,
   model: z.string(),
   credentials: Credentials,
   settings: Settings.optional(),
 });
+export type ConfigV1 = z.infer<typeof ConfigV1>;
+
+// Provider-specific config stored in providers object
+export const ProviderSettings = z.object({
+  model: z.string(),
+  credentials: Credentials,
+});
+export type ProviderSettings = z.infer<typeof ProviderSettings>;
+
+// V2 Config (multi-provider support)
+export const ConfigV2 = z.object({
+  version: z.literal(2),
+  activeProvider: ProviderName,
+  providers: z.record(z.string(), ProviderSettings),
+  settings: Settings.optional(),
+});
+export type ConfigV2 = Omit<z.infer<typeof ConfigV2>, 'providers'> & {
+  providers: Partial<Record<ProviderName, ProviderSettings>>;
+};
+
+// Union type for loading
+export const Config = z.union([ConfigV2, ConfigV1]);
 export type Config = z.infer<typeof Config>;
 
 export interface CommandResult {

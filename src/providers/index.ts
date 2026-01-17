@@ -1,4 +1,4 @@
-import type { Config } from '../core/types.js';
+import type { ConfigV2, ProviderName } from '../core/types.js';
 import type { AIProvider, ProviderConfig } from './base.js';
 import {
   CHATGPT_SUBSCRIPTION_MODELS,
@@ -14,29 +14,43 @@ import { OLLAMA_RECOMMENDED_MODELS, OllamaProvider } from './ollama.js';
 import { OPENAI_MODELS, OpenAIProvider } from './openai.js';
 import { OPENROUTER_MODELS, OpenRouterProvider } from './openrouter.js';
 
-export function createProvider(config: Config): AIProvider {
+export function createProvider(config: ConfigV2): AIProvider {
+  const activeProvider = config.activeProvider;
+  const settings = config.providers[activeProvider];
+
+  if (!settings) {
+    throw new Error(`Provider ${activeProvider} not configured`);
+  }
+
   const providerConfig: ProviderConfig = {
-    model: config.model,
-    credentials: config.credentials,
+    model: settings.model,
+    credentials: settings.credentials,
   };
 
-  switch (config.provider) {
+  return createProviderFromType(activeProvider, providerConfig);
+}
+
+function createProviderFromType(
+  provider: ProviderName,
+  config: ProviderConfig,
+): AIProvider {
+  switch (provider) {
     case 'claude':
-      return new ClaudeProvider(providerConfig);
+      return new ClaudeProvider(config);
     case 'claude-subscription':
-      return new ClaudeSubscriptionProvider(providerConfig);
+      return new ClaudeSubscriptionProvider(config);
     case 'openai':
-      return new OpenAIProvider(providerConfig);
+      return new OpenAIProvider(config);
     case 'chatgpt-subscription':
-      return new ChatGPTSubscriptionProvider(providerConfig);
+      return new ChatGPTSubscriptionProvider(config);
     case 'copilot':
-      return new CopilotProvider(providerConfig);
+      return new CopilotProvider(config);
     case 'ollama':
-      return new OllamaProvider(providerConfig);
+      return new OllamaProvider(config);
     case 'openrouter':
-      return new OpenRouterProvider(providerConfig);
+      return new OpenRouterProvider(config);
     default:
-      throw new Error(`Unknown provider: ${config.provider}`);
+      throw new Error(`Unknown provider: ${provider}`);
   }
 }
 

@@ -69,10 +69,11 @@ export class CopilotProvider implements AIProvider {
 
         // Update stored config with new Copilot token
         const currentConfig = loadConfig();
-        if (currentConfig && currentConfig.credentials.type === 'copilot') {
-          currentConfig.credentials.copilotToken = newTokenData.token;
-          currentConfig.credentials.copilotTokenExpiresAt = parsed.expiresAt;
-          currentConfig.credentials.apiEndpoint = parsed.apiEndpoint;
+        const providerSettings = currentConfig?.providers.copilot;
+        if (currentConfig && providerSettings?.credentials.type === 'copilot') {
+          providerSettings.credentials.copilotToken = newTokenData.token;
+          providerSettings.credentials.copilotTokenExpiresAt = parsed.expiresAt;
+          providerSettings.credentials.apiEndpoint = parsed.apiEndpoint;
           saveConfig(currentConfig);
         }
       } catch (error) {

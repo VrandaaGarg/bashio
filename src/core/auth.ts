@@ -12,7 +12,12 @@ import {
 } from '../providers/index.js';
 import { logger } from '../utils/logger.js';
 import { createSpinner } from '../utils/spinner.js';
-import { saveConfig } from './config.js';
+import {
+  isProviderConfigured,
+  loadConfig,
+  saveConfig,
+  setProviderConfig,
+} from './config.js';
 import {
   buildChatGPTAuthUrl,
   buildClaudeAuthUrl,
@@ -27,7 +32,18 @@ import {
   requestCopilotDeviceCode,
   startCallbackServer,
 } from './oauth.js';
-import type { Config, Credentials, ProviderName } from './types.js';
+import type { ConfigV2, Credentials, ProviderName } from './types.js';
+
+// Provider display names
+export const PROVIDER_DISPLAY_NAMES: Record<ProviderName, string> = {
+  'claude-subscription': 'Claude Pro/Max',
+  'chatgpt-subscription': 'ChatGPT Plus/Pro',
+  copilot: 'GitHub Copilot',
+  claude: 'Claude (API Key)',
+  openai: 'ChatGPT (API Key)',
+  ollama: 'Ollama (Local)',
+  openrouter: 'OpenRouter',
+};
 
 async function openBrowser(url: string): Promise<boolean> {
   try {
@@ -118,6 +134,8 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
   }
   console.log(pc.bold('  Bashio Setup\n'));
 
+  const existingConfig = loadConfig();
+
   const provider = await select<ProviderName>({
     message: 'Select your AI provider:',
     choices: [
@@ -158,6 +176,30 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       },
     ],
   });
+
+  // Check if provider already configured
+  if (existingConfig && isProviderConfigured(existingConfig, provider)) {
+    const currentModel = existingConfig.providers[provider]?.model;
+    console.log();
+    console.log(
+      pc.yellow(`  ${PROVIDER_DISPLAY_NAMES[provider]} is already configured.`),
+    );
+    console.log(pc.dim(`  Current model: ${currentModel}`));
+    console.log();
+
+    const action = await select({
+      message: 'What would you like to do?',
+      choices: [
+        { value: 'reauth', name: 'Update credentials (re-authenticate)' },
+        { value: 'cancel', name: 'Cancel' },
+      ],
+    });
+
+    if (action === 'cancel') {
+      console.log(pc.dim('\n  Cancelled.\n'));
+      return false;
+    }
+  }
 
   let credentials: Credentials;
   let model: string;
@@ -360,12 +402,14 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       throw new Error(`Unknown provider: ${provider}`);
   }
 
-  const config: Config = {
-    version: 1,
-    provider,
-    model,
-    credentials,
-    settings: {
+  const providerSettings = { model, credentials };
+
+  // Build config for validation
+  const tempConfig: ConfigV2 = {
+    version: 2,
+    activeProvider: provider,
+    providers: { [provider]: providerSettings },
+    settings: existingConfig?.settings || {
       confirmBeforeExecute: true,
       historyEnabled: true,
       historyRetentionDays: 30,
@@ -377,7 +421,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
   const spinner = createSpinner('Validating credentials...').start();
 
   try {
-    const providerInstance = createProvider(config);
+    const providerInstance = createProvider(tempConfig);
     const valid = await providerInstance.validateCredentials();
 
     if (!valid) {
@@ -393,11 +437,16 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
     return false;
   }
 
-  saveConfig(config);
+  // Merge with existing config or create new
+  const finalConfig = existingConfig
+    ? setProviderConfig(existingConfig, provider, providerSettings, true)
+    : tempConfig;
+
+  saveConfig(finalConfig);
 
   console.log();
   logger.success('Configuration saved!');
-  console.log(pc.gray(`  Provider: ${provider}`));
+  console.log(pc.gray(`  Provider: ${PROVIDER_DISPLAY_NAMES[provider]}`));
   console.log(pc.gray(`  Model: ${model}`));
   console.log();
 
