@@ -2,6 +2,7 @@ import * as readline from 'node:readline';
 import { confirm, input } from '@inquirer/prompts';
 import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
+import { runAuthSetup } from '../../core/auth.js';
 import { configExists, loadConfig } from '../../core/config.js';
 import { executeCommand } from '../../core/executor.js';
 import { markExecuted, recordCommand } from '../../core/history.js';
@@ -81,20 +82,22 @@ export class DefaultCommand extends Command {
     }
 
     // Step 2: Not a shortcut, use AI provider
-    if (!configExists()) {
-      logger.warn('Bashio is not configured yet.');
-      console.log(pc.gray("Run 'b --auth' to set up your AI provider.\n"));
-      return 1;
-    }
-
-    if (!config) {
-      logger.error('Failed to load configuration.');
-      console.log(pc.gray("Run 'b --auth' to reconfigure.\n"));
-      return 1;
+    let currentConfig = config;
+    if (!configExists() || !currentConfig) {
+      const success = await runAuthSetup();
+      if (!success) {
+        return 1;
+      }
+      console.log(pc.green('Setup complete! Running your command...\n'));
+      currentConfig = loadConfig();
+      if (!currentConfig) {
+        logger.error('Failed to load configuration after setup.');
+        return 1;
+      }
     }
 
     const queryText = this.query.join(' ').trim();
-    const provider = createProvider(config);
+    const provider = createProvider(currentConfig);
     const spinner = createSpinner('Generating command...').start();
 
     let generatedCommand: string;
