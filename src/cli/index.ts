@@ -1,7 +1,35 @@
 import { Builtins, Cli } from 'clipanion';
+import updateNotifier from 'update-notifier';
 import { loadConfig } from '../core/config.js';
 import { initDatabase } from '../core/database.js';
 import { cleanupHistory, shouldRunCleanup } from '../core/history.js';
+
+const pkg = {
+  name: 'bashio',
+  version: '0.5.0',
+};
+
+// Check for updates (runs in background, cached for 1 day)
+const notifier = updateNotifier({
+  pkg,
+  updateCheckInterval: 1000 * 60 * 60 * 24, // 1 day
+});
+
+// Show update notification if available
+notifier.notify({
+  message:
+    'Bashio update available: {currentVersion} → {latestVersion}\n' +
+    'Run: {updateCommand}',
+  boxenOptions: {
+    padding: 1,
+    margin: 1,
+    borderStyle: 'round',
+    borderColor: 'cyan',
+    title: '✨ Update Available',
+    titleAlignment: 'center',
+  },
+});
+
 import { AddShortcutCommand } from './commands/AddShortcutCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
 import { ClearHistoryCommand } from './commands/ClearHistoryCommand.js';
@@ -29,7 +57,7 @@ if (shouldRunCleanup()) {
 const cli = new Cli({
   binaryLabel: 'Bashio',
   binaryName: 'b',
-  binaryVersion: '0.4.0',
+  binaryVersion: pkg.version,
 });
 
 cli.register(DefaultCommand);

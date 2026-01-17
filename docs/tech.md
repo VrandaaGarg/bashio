@@ -77,7 +77,7 @@ import { Cli, Command, Option } from 'clipanion';
 const cli = new Cli({
   binaryLabel: 'Bashio',
   binaryName: 's',
-  binaryVersion: '0.4.0',
+  binaryVersion: '0.5.0',
 });
 
 export class DefaultCommand extends Command {

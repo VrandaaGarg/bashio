@@ -91,7 +91,7 @@ if (shouldRunCleanup()) {
 const cli = new Cli({
   binaryLabel: 'Bashio',
   binaryName: 's',
-  binaryVersion: '0.4.0',
+  binaryVersion: '0.5.0',
 });
 
 cli.register(DefaultCommand);
