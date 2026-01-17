@@ -146,7 +146,7 @@ Track what commands you use. Enable pattern detection and suggestions.
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                           USER INPUT                                     │
-│                    s "kill whatever is on port 3000"                    │
+│                    b "kill whatever is on port 3000"                    │
 └───────────────────────────────┬─────────────────────────────────────────┘
                                 │
                                 ▼

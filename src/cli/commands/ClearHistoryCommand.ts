@@ -37,7 +37,7 @@ export class ClearHistoryCommand extends Command {
         pc.gray('    --older-than N  Clear entries older than N days'),
       );
       console.log();
-      console.log(pc.dim('  Example: s --clear-history --older-than 30\n'));
+      console.log(pc.dim('  Example: b --clear-history --older-than 30\n'));
       return 1;
     }
 

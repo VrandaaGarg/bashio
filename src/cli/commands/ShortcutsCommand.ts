@@ -17,7 +17,7 @@ export class ShortcutsCommand extends Command {
 
     if (names.length === 0) {
       console.log(pc.yellow('\n  No shortcuts configured yet.\n'));
-      console.log(pc.gray('  Add one with: s --add-shortcut\n'));
+      console.log(pc.gray('  Add one with: b --add-shortcut\n'));
       return 0;
     }
 

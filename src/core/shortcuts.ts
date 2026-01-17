@@ -89,7 +89,7 @@ function parseInput(
   }
 
   // If shortcut expects only 1 argument, join all remaining parts as one
-  // This handles: s commit my commit message -> message = "my commit message"
+  // This handles: b commit my commit message -> message = "my commit message"
   if (expectedArgCount === 1) {
     return { name, args: [remainingParts.join(' ')] };
   }

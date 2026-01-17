@@ -29,7 +29,7 @@ export class AddShortcutCommand extends Command {
     let shortcutArgs: string[];
     let shortcutDescription: string | undefined;
 
-    // One-liner mode: s --add-shortcut "name" "template" "args"
+    // One-liner mode: b --add-shortcut "name" "template" "args"
     if (this.name && this.template) {
       shortcutName = this.name;
       shortcutTemplate = this.template;
@@ -103,11 +103,11 @@ export class AddShortcutCommand extends Command {
     if (shortcutArgs.length > 0) {
       console.log(
         pc.gray(
-          `  Usage: s ${shortcutName} ${shortcutArgs.map((a) => `<${a}>`).join(' ')}`,
+          `  Usage: b ${shortcutName} ${shortcutArgs.map((a) => `<${a}>`).join(' ')}`,
         ),
       );
     } else {
-      console.log(pc.gray(`  Usage: s ${shortcutName}`));
+      console.log(pc.gray(`  Usage: b ${shortcutName}`));
     }
     console.log();
 

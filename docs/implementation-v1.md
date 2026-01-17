@@ -16,17 +16,17 @@ bashio/
 │   │   ├── index.ts          # Clipanion CLI setup & command registration
 │   │   └── commands/
 │   │       ├── DefaultCommand.ts     # Main command (s <query>)
-│   │       ├── AuthCommand.ts        # s --auth
-│   │       ├── ConfigCommand.ts      # s --config
-│   │       ├── ModelCommand.ts       # s --model
-│   │       ├── ShortcutsCommand.ts   # s --shortcuts
-│   │       ├── AddShortcutCommand.ts # s --add-shortcut
-│   │       ├── RemoveShortcutCommand.ts  # s --remove-shortcut
-│   │       ├── EditShortcutsCommand.ts   # s --edit-shortcuts
-│   │       ├── HistoryCommand.ts     # s --history
-│   │       ├── StatsCommand.ts       # s --stats
-│   │       ├── ClearHistoryCommand.ts    # s --clear-history
-│   │       └── SuggestShortcutsCommand.ts # s --suggest-shortcuts
+│   │       ├── AuthCommand.ts        # b --auth
+│   │       ├── ConfigCommand.ts      # b --config
+│   │       ├── ModelCommand.ts       # b --model
+│   │       ├── ShortcutsCommand.ts   # b --shortcuts
+│   │       ├── AddShortcutCommand.ts # b --add-shortcut
+│   │       ├── RemoveShortcutCommand.ts  # b --remove-shortcut
+│   │       ├── EditShortcutsCommand.ts   # b --edit-shortcuts
+│   │       ├── HistoryCommand.ts     # b --history
+│   │       ├── StatsCommand.ts       # b --stats
+│   │       ├── ClearHistoryCommand.ts    # b --clear-history
+│   │       └── SuggestShortcutsCommand.ts # b --suggest-shortcuts
 │   ├── core/
 │   │   ├── config.ts         # Config file management
 │   │   ├── database.ts       # SQLite database setup

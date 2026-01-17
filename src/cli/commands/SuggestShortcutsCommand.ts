@@ -116,7 +116,7 @@ export class SuggestShortcutsCommand extends Command {
         logger.success(`✓ Created shortcut: ${finalName}`);
         console.log(
           pc.dim(
-            `  Usage: s ${finalName}${args.length > 0 ? ` ${args.map((a) => `<${a}>`).join(' ')}` : ''}`,
+            `  Usage: b ${finalName}${args.length > 0 ? ` ${args.map((a) => `<${a}>`).join(' ')}` : ''}`,
           ),
         );
         console.log();
