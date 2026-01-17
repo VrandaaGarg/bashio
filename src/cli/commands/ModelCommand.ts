@@ -4,7 +4,9 @@ import { Command } from 'clipanion';
 import pc from 'picocolors';
 import { configExists, loadConfig, saveConfig } from '../../core/config.js';
 import {
+  CHATGPT_SUBSCRIPTION_MODELS,
   CLAUDE_MODELS,
+  CLAUDE_SUBSCRIPTION_MODELS,
   OllamaProvider,
   OPENAI_MODELS,
   OPENROUTER_MODELS,
@@ -159,6 +161,30 @@ export class ModelCommand extends Command {
           newModel = await selectWithEsc<string>({
             message: 'Select new model:',
             choices: OPENROUTER_MODELS.map((m) => ({
+              value: m.value,
+              name: m.label,
+            })),
+            default: config.model,
+          });
+          break;
+        }
+
+        case 'claude-subscription': {
+          newModel = await selectWithEsc<string>({
+            message: 'Select new model:',
+            choices: CLAUDE_SUBSCRIPTION_MODELS.map((m) => ({
+              value: m.value,
+              name: m.label,
+            })),
+            default: config.model,
+          });
+          break;
+        }
+
+        case 'chatgpt-subscription': {
+          newModel = await selectWithEsc<string>({
+            message: 'Select new model:',
+            choices: CHATGPT_SUBSCRIPTION_MODELS.map((m) => ({
               value: m.value,
               name: m.label,
             })),

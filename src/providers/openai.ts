@@ -91,8 +91,12 @@ export class OpenAIProvider implements AIProvider {
   }
 }
 
+// Latest OpenAI models available via API key (as of Jan 2026)
 export const OPENAI_MODELS = [
-  { value: 'gpt-4o', label: 'GPT-4o (recommended)' },
-  { value: 'gpt-4o-mini', label: 'GPT-4o Mini (fast)' },
-  { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+  { value: 'gpt-5.2', label: 'GPT-5.2 (most intelligent)' },
+  { value: 'gpt-5.1', label: 'GPT-5.1 (recommended)' },
+  { value: 'gpt-5-mini', label: 'GPT-5 Mini (fast)' },
+  { value: 'gpt-5-nano', label: 'GPT-5 Nano (fastest)' },
+  { value: 'gpt-4.1', label: 'GPT-4.1' },
+  { value: 'gpt-4o', label: 'GPT-4o (legacy)' },
 ];

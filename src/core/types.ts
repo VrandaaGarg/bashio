@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 export const ProviderName = z.enum([
   'claude',
+  'claude-subscription',
   'openai',
+  'chatgpt-subscription',
   'ollama',
   'openrouter',
 ]);
@@ -23,10 +25,28 @@ export const LocalCredentials = z.object({
   host: z.string().default('http://localhost:11434'),
 });
 
+export const ClaudeSubscriptionCredentials = z.object({
+  type: z.literal('claude_subscription'),
+  accessToken: z.string(),
+  refreshToken: z.string(),
+  expiresAt: z.number(), // Unix timestamp in ms
+  email: z.string().optional(),
+});
+
+export const ChatGPTSubscriptionCredentials = z.object({
+  type: z.literal('chatgpt_subscription'),
+  accessToken: z.string(),
+  refreshToken: z.string().optional(),
+  expiresAt: z.number().optional(), // Unix timestamp in ms
+  accountId: z.string().optional(), // ChatGPT account ID for API requests
+});
+
 export const Credentials = z.discriminatedUnion('type', [
   SessionCredentials,
   ApiKeyCredentials,
   LocalCredentials,
+  ClaudeSubscriptionCredentials,
+  ChatGPTSubscriptionCredentials,
 ]);
 export type Credentials = z.infer<typeof Credentials>;
 
