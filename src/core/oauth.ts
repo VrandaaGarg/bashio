@@ -12,6 +12,16 @@ export const CLAUDE_OAUTH_CONFIG = {
   callbackPort: 8765,
 } as const;
 
+// GitHub Copilot OAuth Configuration (Device Flow)
+export const COPILOT_OAUTH_CONFIG = {
+  clientId: 'Iv1.b507a08c87ecfe98', // Official GitHub Copilot client ID
+  deviceCodeUrl: 'https://github.com/login/device/code',
+  accessTokenUrl: 'https://github.com/login/oauth/access_token',
+  copilotTokenUrl: 'https://api.github.com/copilot_internal/v2/token',
+  apiEndpoint: 'https://api.githubcopilot.com/chat/completions',
+  scope: 'read:user',
+} as const;
+
 // ChatGPT OAuth Configuration (official Codex CLI values)
 export const CHATGPT_OAUTH_CONFIG = {
   clientId: 'app_EMoamEEZ73f0CkXaXp7hrann', // Official Codex CLI client ID
@@ -390,4 +400,164 @@ export function startCallbackServer(
 
     server.listen(port, '127.0.0.1');
   });
+}
+
+// GitHub Copilot Device Flow Types
+export interface DeviceCodeResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  expires_in: number;
+  interval: number;
+}
+
+export interface CopilotTokenResponse {
+  token: string;
+  expires_at: number;
+}
+
+// GitHub Copilot Device Flow Functions
+export async function requestCopilotDeviceCode(): Promise<DeviceCodeResponse> {
+  const body = new URLSearchParams({
+    client_id: COPILOT_OAUTH_CONFIG.clientId,
+    scope: COPILOT_OAUTH_CONFIG.scope,
+  });
+
+  const response = await fetch(COPILOT_OAUTH_CONFIG.deviceCodeUrl, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: body.toString(),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Failed to request device code: ${response.status} - ${errorText}`,
+    );
+  }
+
+  return (await response.json()) as DeviceCodeResponse;
+}
+
+export async function pollForCopilotAccessToken(
+  deviceCode: string,
+  intervalMs: number,
+  expiresAt: number,
+): Promise<string> {
+  const body = new URLSearchParams({
+    client_id: COPILOT_OAUTH_CONFIG.clientId,
+    device_code: deviceCode,
+    grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+  });
+
+  while (Date.now() < expiresAt) {
+    const response = await fetch(COPILOT_OAUTH_CONFIG.accessTokenUrl, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    });
+
+    const data = (await response.json()) as {
+      access_token?: string;
+      error?: string;
+    };
+
+    if (data.access_token) {
+      return data.access_token;
+    }
+
+    if (data.error === 'authorization_pending') {
+      await new Promise((r) => setTimeout(r, intervalMs));
+      continue;
+    }
+
+    if (data.error === 'slow_down') {
+      await new Promise((r) => setTimeout(r, intervalMs + 5000));
+      continue;
+    }
+
+    if (data.error === 'expired_token') {
+      throw new Error('Device code expired. Please try again.');
+    }
+
+    if (data.error === 'access_denied') {
+      throw new Error('Access denied. User cancelled authorization.');
+    }
+
+    throw new Error(`GitHub OAuth error: ${data.error || 'Unknown error'}`);
+  }
+
+  throw new Error('Authorization timed out. Please try again.');
+}
+
+export async function exchangeGitHubTokenForCopilot(
+  githubToken: string,
+): Promise<CopilotTokenResponse> {
+  const response = await fetch(COPILOT_OAUTH_CONFIG.copilotTokenUrl, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${githubToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    if (response.status === 401) {
+      throw new Error('GitHub token is invalid or expired.');
+    }
+    if (response.status === 403) {
+      throw new Error(
+        'You do not have access to GitHub Copilot. Please ensure you have an active Copilot subscription.',
+      );
+    }
+    throw new Error(
+      `Failed to get Copilot token: ${response.status} - ${errorText}`,
+    );
+  }
+
+  return (await response.json()) as CopilotTokenResponse;
+}
+
+export function parseCopilotToken(token: string): {
+  expiresAt: number;
+  apiEndpoint: string;
+} {
+  let expiresAt = Date.now() + 30 * 60 * 1000; // Default 30 min
+  let apiEndpoint: string = COPILOT_OAUTH_CONFIG.apiEndpoint;
+
+  const pairs = token.split(';');
+  for (const pair of pairs) {
+    const [key, value] = pair.split('=');
+    if (key?.trim() === 'exp' && value) {
+      expiresAt = Number.parseInt(value.trim(), 10) * 1000;
+    }
+    if (key?.trim() === 'proxy-ep' && value) {
+      // Convert proxy.* to api.* and ensure https:// prefix
+      let proxyUrl = value.trim();
+      // Add https:// if missing
+      if (!proxyUrl.startsWith('http')) {
+        proxyUrl = `https://${proxyUrl}`;
+      }
+      // Convert proxy subdomain to api subdomain
+      apiEndpoint = proxyUrl.replace(/\/\/proxy\./i, '//api.');
+      // Append /chat/completions if not present
+      if (!apiEndpoint.includes('/chat/completions')) {
+        apiEndpoint = `${apiEndpoint}/chat/completions`;
+      }
+    }
+  }
+
+  return { expiresAt, apiEndpoint };
+}
+
+export function isCopilotTokenExpired(expiresAt: number): boolean {
+  const bufferMs = 5 * 60 * 1000; // 5 minutes buffer
+  return Date.now() >= expiresAt - bufferMs;
 }

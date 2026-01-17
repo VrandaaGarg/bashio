@@ -5,6 +5,7 @@ export const ProviderName = z.enum([
   'claude-subscription',
   'openai',
   'chatgpt-subscription',
+  'copilot',
   'ollama',
   'openrouter',
 ]);
@@ -41,12 +42,21 @@ export const ChatGPTSubscriptionCredentials = z.object({
   accountId: z.string().optional(), // ChatGPT account ID for API requests
 });
 
+export const CopilotCredentials = z.object({
+  type: z.literal('copilot'),
+  githubToken: z.string(), // GitHub OAuth access token (gho_xxx)
+  copilotToken: z.string(), // Copilot API token (short-lived)
+  copilotTokenExpiresAt: z.number(), // Unix timestamp in ms
+  apiEndpoint: z.string().optional(), // Derived from token (api.individual/business.githubcopilot.com)
+});
+
 export const Credentials = z.discriminatedUnion('type', [
   SessionCredentials,
   ApiKeyCredentials,
   LocalCredentials,
   ClaudeSubscriptionCredentials,
   ChatGPTSubscriptionCredentials,
+  CopilotCredentials,
 ]);
 export type Credentials = z.infer<typeof Credentials>;
 

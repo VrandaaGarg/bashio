@@ -7,6 +7,7 @@ import {
   CHATGPT_SUBSCRIPTION_MODELS,
   CLAUDE_MODELS,
   CLAUDE_SUBSCRIPTION_MODELS,
+  COPILOT_MODELS,
   OllamaProvider,
   OPENAI_MODELS,
   OPENROUTER_MODELS,
@@ -185,6 +186,18 @@ export class ModelCommand extends Command {
           newModel = await selectWithEsc<string>({
             message: 'Select new model:',
             choices: CHATGPT_SUBSCRIPTION_MODELS.map((m) => ({
+              value: m.value,
+              name: m.label,
+            })),
+            default: config.model,
+          });
+          break;
+        }
+
+        case 'copilot': {
+          newModel = await selectWithEsc<string>({
+            message: 'Select new model:',
+            choices: COPILOT_MODELS.map((m) => ({
               value: m.value,
               name: m.label,
             })),

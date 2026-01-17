@@ -4,6 +4,7 @@ import {
   CHATGPT_SUBSCRIPTION_MODELS,
   CLAUDE_MODELS,
   CLAUDE_SUBSCRIPTION_MODELS,
+  COPILOT_MODELS,
   createProvider,
   OllamaProvider,
   OPENAI_MODELS,
@@ -19,7 +20,11 @@ import {
   CLAUDE_OAUTH_CONFIG,
   exchangeChatGPTCode,
   exchangeClaudeCode,
+  exchangeGitHubTokenForCopilot,
   generatePKCE,
+  parseCopilotToken,
+  pollForCopilotAccessToken,
+  requestCopilotDeviceCode,
   startCallbackServer,
 } from './oauth.js';
 import type { Config, Credentials, ProviderName } from './types.js';
@@ -127,6 +132,11 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
         description: 'Use your existing ChatGPT subscription',
       },
       {
+        value: 'copilot' as const,
+        name: 'GitHub Copilot',
+        description: 'Use your GitHub Copilot subscription',
+      },
+      {
         value: 'claude' as const,
         name: 'Claude (API Key)',
         description: 'Use Anthropic API key',
@@ -224,6 +234,39 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       model = await select({
         message: 'Select model:',
         choices: CHATGPT_SUBSCRIPTION_MODELS.map((m) => ({
+          value: m.value,
+          name: m.label,
+        })),
+      });
+      break;
+    }
+
+    case 'copilot': {
+      console.log();
+      console.log(
+        pc.yellow('  Note: This uses your GitHub Copilot subscription.'),
+      );
+      console.log(
+        pc.dim('  You need an active GitHub Copilot subscription to use this.'),
+      );
+      console.log();
+
+      const copilotResult = await performCopilotDeviceFlow();
+      if (!copilotResult) {
+        return false;
+      }
+
+      credentials = {
+        type: 'copilot',
+        githubToken: copilotResult.githubToken,
+        copilotToken: copilotResult.copilotToken,
+        copilotTokenExpiresAt: copilotResult.copilotTokenExpiresAt,
+        apiEndpoint: copilotResult.apiEndpoint,
+      };
+
+      model = await select({
+        message: 'Select model:',
+        choices: COPILOT_MODELS.map((m) => ({
           value: m.value,
           name: m.label,
         })),
@@ -549,6 +592,75 @@ async function performManualOAuth(
     }
   } catch {
     logger.error('Invalid URL format');
+    return null;
+  }
+}
+
+interface CopilotAuthResult {
+  githubToken: string;
+  copilotToken: string;
+  copilotTokenExpiresAt: number;
+  apiEndpoint: string;
+}
+
+async function performCopilotDeviceFlow(): Promise<CopilotAuthResult | null> {
+  try {
+    const spinner = createSpinner('Requesting device code...').start();
+    const deviceCode = await requestCopilotDeviceCode();
+    spinner.stop();
+
+    console.log();
+    console.log(pc.bold('  To authenticate with GitHub Copilot:'));
+    console.log();
+    console.log(
+      `  1. Visit: ${pc.cyan(pc.underline(deviceCode.verification_uri))}`,
+    );
+    console.log(`  2. Enter code: ${pc.bold(pc.green(deviceCode.user_code))}`);
+    console.log();
+
+    const browserOpened = await openBrowser(deviceCode.verification_uri);
+    if (browserOpened) {
+      console.log(pc.dim('  Browser opened automatically.'));
+    }
+
+    console.log(pc.dim('  Waiting for authorization...'));
+    console.log();
+
+    const expiresAt = Date.now() + deviceCode.expires_in * 1000;
+    const intervalMs = (deviceCode.interval || 5) * 1000;
+
+    const githubToken = await pollForCopilotAccessToken(
+      deviceCode.device_code,
+      intervalMs,
+      expiresAt,
+    );
+
+    const exchangeSpinner = createSpinner(
+      'Getting Copilot access token...',
+    ).start();
+
+    try {
+      const copilotTokenData = await exchangeGitHubTokenForCopilot(githubToken);
+      const parsed = parseCopilotToken(copilotTokenData.token);
+
+      exchangeSpinner.succeed('Authentication successful!');
+
+      return {
+        githubToken,
+        copilotToken: copilotTokenData.token,
+        copilotTokenExpiresAt: parsed.expiresAt,
+        apiEndpoint: parsed.apiEndpoint,
+      };
+    } catch (error) {
+      exchangeSpinner.fail(
+        `Failed to get Copilot token: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      return null;
+    }
+  } catch (error) {
+    logger.error(
+      `GitHub authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
     return null;
   }
 }
