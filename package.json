@@ -1,6 +1,6 @@
 {
   "name": "bashio",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "better-sqlite3"

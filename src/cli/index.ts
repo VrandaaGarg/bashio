@@ -6,7 +6,7 @@ import { cleanupHistory, shouldRunCleanup } from '../core/history.js';
 
 const pkg = {
   name: 'bashio',
-  version: '0.5.2',
+  version: '0.6.0',
 };
 
 // Check for updates (runs in background, cached for 1 day)
