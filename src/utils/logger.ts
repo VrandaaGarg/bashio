@@ -7,7 +7,7 @@ export const logger = {
   error: (msg: string) => console.log(pc.red('✗'), msg),
 
   command: (cmd: string) => {
-    console.log(pc.gray('>'), pc.cyan('Will run:'), pc.white(cmd));
+    console.log(pc.gray('>'), pc.yellow('Will run:'), pc.white(cmd));
   },
 
   output: (text: string) => {

@@ -19,7 +19,7 @@ const notifier = updateNotifier({
 // Custom update notification matching welcome banner theme
 if (notifier.update) {
   const { current, latest } = notifier.update;
-  const cyan = pc.cyan;
+  const orange = pc.yellow;
   const width = 44;
 
   const ansiRegex = new RegExp(
@@ -33,18 +33,18 @@ if (notifier.update) {
     return text + ' '.repeat(Math.max(0, padding));
   };
   const line = (content: string): string =>
-    cyan('  │') + pad(content, width) + cyan('│');
+    orange('  │') + pad(content, width) + orange('│');
 
   console.log();
-  console.log(cyan(`  ┌${'─'.repeat(width)}┐`));
+  console.log(orange(`  ┌${'─'.repeat(width)}┐`));
   console.log(line(''));
   console.log(line(pc.bold('     Bashio Update Available!')));
   console.log(line(''));
   console.log(line(`   ${pc.dim(current)} → ${pc.green(pc.bold(latest))}`));
   console.log(line(''));
-  console.log(line(`   Run: ${pc.cyan('npm i -g bashio@latest')}`));
+  console.log(line(`   Run: ${pc.yellow('npm i -g bashio@latest')}`));
   console.log(line(''));
-  console.log(cyan(`  └${'─'.repeat(width)}┘`));
+  console.log(orange(`  └${'─'.repeat(width)}┘`));
   console.log();
 }
 

@@ -16,7 +16,7 @@ export class AuthCommand extends Command {
     if (success) {
       console.log(
         pc.green("You're all set! Try:"),
-        pc.cyan('b find all png files'),
+        pc.yellow('b find all png files'),
       );
       console.log();
     }

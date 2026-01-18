@@ -10,6 +10,7 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../providers/index.js';
+import { bashioTheme } from '../utils/inquirerTheme.js';
 import { logger } from '../utils/logger.js';
 import { createSpinner } from '../utils/spinner.js';
 import {
@@ -67,7 +68,7 @@ async function openBrowser(url: string): Promise<boolean> {
 }
 
 function showWelcomeBanner(): void {
-  const cyan = pc.cyan;
+  const orange = pc.yellow;
   const dim = pc.dim;
   const width = 58;
 
@@ -85,10 +86,10 @@ function showWelcomeBanner(): void {
   };
 
   const line = (content: string): string =>
-    cyan('  │') + pad(content, width) + cyan('│');
+    orange('  │') + pad(content, width) + orange('│');
 
   console.log();
-  console.log(cyan(`  ┌${'─'.repeat(width)}┐`));
+  console.log(orange(`  ┌${'─'.repeat(width)}┐`));
   console.log(line(''));
   console.log(
     line(
@@ -124,7 +125,7 @@ function showWelcomeBanner(): void {
   console.log(line(dim('   Natural language to shell commands.')));
   console.log(line(dim('   Stop Googling, start doing.')));
   console.log(line(''));
-  console.log(cyan(`  └${'─'.repeat(width)}┘`));
+  console.log(orange(`  └${'─'.repeat(width)}┘`));
   console.log();
 }
 
@@ -175,6 +176,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
         description: 'Pay per use, multiple models',
       },
     ],
+    theme: bashioTheme,
   });
 
   // Check if provider already configured
@@ -193,6 +195,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
         { value: 'reauth', name: 'Update credentials (re-authenticate)' },
         { value: 'cancel', name: 'Cancel' },
       ],
+      theme: bashioTheme,
     });
 
     if (action === 'cancel') {
@@ -238,6 +241,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
+        theme: bashioTheme,
       });
       break;
     }
@@ -279,6 +283,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
+        theme: bashioTheme,
       });
       break;
     }
@@ -312,6 +317,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
+        theme: bashioTheme,
       });
       break;
     }
@@ -329,6 +335,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
+        theme: bashioTheme,
       });
       break;
     }
@@ -346,6 +353,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
+        theme: bashioTheme,
       });
       break;
     }
@@ -377,6 +385,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       model = await select({
         message: 'Select model:',
         choices: modelChoices,
+        theme: bashioTheme,
       });
       break;
     }
@@ -394,6 +403,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
+        theme: bashioTheme,
       });
       break;
     }
@@ -476,6 +486,7 @@ async function performClaudeOAuth(): Promise<OAuthResult | null> {
         description: 'Copy URL to browser, then paste the callback URL',
       },
     ],
+    theme: bashioTheme,
   });
 
   const pkce = generatePKCE();
@@ -511,6 +522,7 @@ async function performChatGPTOAuth(): Promise<OAuthResult | null> {
         description: 'Copy URL to browser, then paste the callback URL',
       },
     ],
+    theme: bashioTheme,
   });
 
   const pkce = generatePKCE();
@@ -552,7 +564,7 @@ async function performBrowserOAuth(
     console.log(pc.yellow('  Could not open browser automatically.'));
     console.log(pc.dim('  Please open this URL manually:'));
     console.log();
-    console.log(`  ${pc.cyan(authUrl)}`);
+    console.log(`  ${pc.yellow(authUrl)}`);
   }
 
   console.log();
@@ -662,7 +674,7 @@ async function performCopilotDeviceFlow(): Promise<CopilotAuthResult | null> {
     console.log(pc.bold('  To authenticate with GitHub Copilot:'));
     console.log();
     console.log(
-      `  1. Visit: ${pc.cyan(pc.underline(deviceCode.verification_uri))}`,
+      `  1. Visit: ${pc.yellow(pc.underline(deviceCode.verification_uri))}`,
     );
     console.log(`  2. Enter code: ${pc.bold(pc.green(deviceCode.user_code))}`);
     console.log();

@@ -115,11 +115,11 @@ export function ModelSwitcher({
         flexDirection="column"
         width={Math.min(70, width - 4)}
         borderStyle="double"
-        borderColor="cyan"
+        borderColor="#eea154ff"
       >
         {/* Header */}
         <Box paddingX={2} paddingY={1} justifyContent="space-between">
-          <Text bold color="cyan">
+          <Text bold color="#eea154ff">
             Select Model
           </Text>
           <Text dimColor>Esc to close | j/k or arrows to navigate</Text>
@@ -138,7 +138,7 @@ export function ModelSwitcher({
             return (
               <Box key={`${option.provider}-${option.model}`}>
                 <Text
-                  color={isSelected ? 'cyan' : undefined}
+                  color={isSelected ? '#eea154ff' : undefined}
                   bold={isSelected}
                   inverse={isSelected}
                 >

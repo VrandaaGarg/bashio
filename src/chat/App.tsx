@@ -1,3 +1,4 @@
+import { MouseProvider } from '@ink-tools/ink-mouse';
 import { Box, render, Text, useApp, useInput, useStdout } from 'ink';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { runAuthSetup } from '../core/auth.js';
@@ -11,13 +12,16 @@ import {
   type MessageListHandle,
 } from './components/MessageList.js';
 import { ModelSwitcher } from './components/ModelSwitcher.js';
+import { SessionHeader } from './components/SessionHeader.js';
 import { SessionPicker } from './components/SessionPicker.js';
+import { WelcomeScreen } from './components/WelcomeScreen.js';
 import {
   createSession,
   loadSession,
   type Session,
   saveSession,
 } from './utils/sessions.js';
+import type { SlashCommandAction } from './utils/slashCommands.js';
 
 export type { ChatMessage };
 
@@ -36,6 +40,7 @@ function ChatApp() {
   const [height, setHeight] = useState(stdout?.rows ?? 24);
   const [width, setWidth] = useState(stdout?.columns ?? 80);
   const messageListRef = useRef<MessageListHandle>(null);
+  const slashModeRef = useRef(false);
 
   const [config, setConfig] = useState<ConfigV2 | null>(null);
   const [provider, setProvider] = useState<AIProvider | null>(null);
@@ -49,7 +54,6 @@ function ChatApp() {
     error: null,
   });
 
-  // Track terminal size
   useEffect(() => {
     const handleResize = () => {
       if (stdout) {
@@ -63,7 +67,6 @@ function ChatApp() {
     };
   }, [stdout]);
 
-  // Initialize config, provider, and create new session
   useEffect(() => {
     const init = async () => {
       if (!configExists()) {
@@ -78,7 +81,6 @@ function ChatApp() {
         setConfig(loadedConfig);
         setProvider(createProvider(loadedConfig));
 
-        // Create a new session on startup
         const activeProvider = loadedConfig.activeProvider;
         const model =
           loadedConfig.providers[activeProvider]?.model ?? 'unknown';
@@ -89,10 +91,9 @@ function ChatApp() {
     init();
   }, [exit]);
 
-  // Save session whenever messages change (after loading completes)
   const messagesLength = state.messages.length;
   const isLoading = state.isLoading;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: save only when message count changes and not loading
+  // biome-ignore lint/correctness/useExhaustiveDependencies: save only when message count changes
   useEffect(() => {
     if (currentSession && messagesLength > 0 && !isLoading) {
       const updatedSession: Session = {
@@ -105,59 +106,72 @@ function ChatApp() {
     }
   }, [messagesLength, isLoading]);
 
-  // Handle global keyboard shortcuts
-  useInput((input, key) => {
-    if (key.ctrl && input === 'c') {
-      exit();
-    }
-    if ((key.ctrl && input === 'm') || (key.ctrl && input === 'p')) {
-      if (!state.showModelSwitcher && !state.showSessionPicker) {
-        setState((s: AppState) => ({ ...s, showModelSwitcher: true }));
+  const handleGlobalInput = useCallback(
+    (input: string, key: { ctrl: boolean; escape: boolean }) => {
+      if (key.ctrl && input === 'c') {
+        exit();
       }
-    }
-    // Ctrl+O to open session picker
-    if (key.ctrl && input === 'o') {
-      if (!state.showModelSwitcher && !state.showSessionPicker) {
-        setState((s: AppState) => ({ ...s, showSessionPicker: true }));
+      if (!slashModeRef.current) {
+        if ((key.ctrl && input === 'm') || (key.ctrl && input === 'p')) {
+          if (!state.showModelSwitcher && !state.showSessionPicker) {
+            setState((s) => ({ ...s, showModelSwitcher: true }));
+          }
+        }
+        if (key.ctrl && input === 'o') {
+          if (!state.showModelSwitcher && !state.showSessionPicker) {
+            setState((s) => ({ ...s, showSessionPicker: true }));
+          }
+        }
       }
-    }
-    if (key.escape) {
-      if (state.showModelSwitcher) {
-        setState((s: AppState) => ({ ...s, showModelSwitcher: false }));
+      if (key.escape) {
+        if (state.showModelSwitcher) {
+          setState((s) => ({ ...s, showModelSwitcher: false }));
+        }
+        if (state.showSessionPicker) {
+          setState((s) => ({ ...s, showSessionPicker: false }));
+        }
       }
-      if (state.showSessionPicker) {
-        setState((s: AppState) => ({ ...s, showSessionPicker: false }));
-      }
-    }
-  });
+    },
+    [exit, state.showModelSwitcher, state.showSessionPicker],
+  );
+
+  useInput(handleGlobalInput);
 
   const handleSubmit = useCallback(
     async (message: string) => {
-      if (!provider || !message.trim() || state.isLoading) return;
+      if (!provider || !message.trim()) return;
 
       const userMessage: ChatMessage = {
         role: 'user',
         content: message.trim(),
       };
-      const newMessages = [...state.messages, userMessage];
 
-      setState((s: AppState) => ({
-        ...s,
-        messages: newMessages,
-        isLoading: true,
-        currentResponse: '',
-        error: null,
-      }));
+      // Get current messages and add user message
+      let messagesWithUser: ChatMessage[] = [];
+      setState((s) => {
+        if (s.isLoading) return s;
+        messagesWithUser = [...s.messages, userMessage];
+        return {
+          ...s,
+          messages: messagesWithUser,
+          isLoading: true,
+          currentResponse: '',
+          error: null,
+        };
+      });
+
+      // If already loading, messagesWithUser will be empty, so return
+      if (messagesWithUser.length === 0) return;
 
       try {
         if (provider.streamChat) {
-          await provider.streamChat(newMessages, (chunk: string) => {
-            setState((s: AppState) => ({
+          await provider.streamChat(messagesWithUser, (chunk: string) => {
+            setState((s) => ({
               ...s,
               currentResponse: s.currentResponse + chunk,
             }));
           });
-          setState((s: AppState) => ({
+          setState((s) => ({
             ...s,
             messages: [
               ...s.messages,
@@ -167,7 +181,7 @@ function ChatApp() {
             currentResponse: '',
           }));
         } else {
-          setState((s: AppState) => ({
+          setState((s) => ({
             ...s,
             messages: [
               ...s.messages,
@@ -180,14 +194,14 @@ function ChatApp() {
           }));
         }
       } catch (err) {
-        setState((s: AppState) => ({
+        setState((s) => ({
           ...s,
           isLoading: false,
           error: err instanceof Error ? err.message : 'Unknown error',
         }));
       }
     },
-    [provider, state.messages, state.isLoading],
+    [provider],
   );
 
   const handleModelSelect = useCallback(
@@ -200,9 +214,8 @@ function ChatApp() {
       }
       setConfig(newConfig);
       setProvider(createProvider(newConfig));
-      setState((s: AppState) => ({ ...s, showModelSwitcher: false }));
+      setState((s) => ({ ...s, showModelSwitcher: false }));
 
-      // Update current session with new model
       if (currentSession) {
         setCurrentSession({
           ...currentSession,
@@ -215,7 +228,7 @@ function ChatApp() {
   );
 
   const handleModelSwitcherClose = useCallback(() => {
-    setState((s: AppState) => ({ ...s, showModelSwitcher: false }));
+    setState((s) => ({ ...s, showModelSwitcher: false }));
   }, []);
 
   const handleSessionSelect = useCallback(
@@ -223,23 +236,21 @@ function ChatApp() {
       if (!config) return;
 
       if (sessionId === null) {
-        // Create new session
         const activeProvider = config.activeProvider;
         const model = config.providers[activeProvider]?.model ?? 'unknown';
         const session = createSession(model, activeProvider);
         setCurrentSession(session);
-        setState((s: AppState) => ({
+        setState((s) => ({
           ...s,
           messages: [],
           showSessionPicker: false,
           error: null,
         }));
       } else {
-        // Load existing session
         const session = loadSession(sessionId);
         if (session) {
           setCurrentSession(session);
-          setState((s: AppState) => ({
+          setState((s) => ({
             ...s,
             messages: session.messages,
             showSessionPicker: false,
@@ -252,8 +263,40 @@ function ChatApp() {
   );
 
   const handleSessionPickerClose = useCallback(() => {
-    setState((s: AppState) => ({ ...s, showSessionPicker: false }));
+    setState((s) => ({ ...s, showSessionPicker: false }));
   }, []);
+
+  const handleSlashCommand = useCallback(
+    (action: SlashCommandAction) => {
+      switch (action) {
+        case 'openModelSwitcher':
+          setState((s) => ({ ...s, showModelSwitcher: true }));
+          break;
+        case 'openSessionPicker':
+          setState((s) => ({ ...s, showSessionPicker: true }));
+          break;
+        case 'newSession':
+          handleSessionSelect(null);
+          break;
+        case 'clearChat':
+          setState((s) => ({ ...s, messages: [], error: null }));
+          if (currentSession) {
+            const clearedSession: Session = {
+              ...currentSession,
+              messages: [],
+              messageCount: 0,
+            };
+            saveSession(clearedSession);
+            setCurrentSession(clearedSession);
+          }
+          break;
+        case 'exitChat':
+          exit();
+          break;
+      }
+    },
+    [handleSessionSelect, currentSession, exit],
+  );
 
   if (!config || !provider) {
     return (
@@ -289,30 +332,43 @@ function ChatApp() {
 
   const activeProvider = config.activeProvider;
   const currentModel = config.providers[activeProvider]?.model ?? 'unknown';
+  const isEmptyChat = state.messages.length === 0 && !state.currentResponse;
 
-  const headerHeight = 3;
-  const inputHeight = 3;
-  const statusHeight = 1;
+  // Welcome screen layout (centered)
+  if (isEmptyChat) {
+    return (
+      <Box flexDirection="column" width={width} height={height}>
+        <WelcomeScreen width={width} height={height}>
+          <InputBox
+            onSubmit={handleSubmit}
+            onSlashCommand={handleSlashCommand}
+            slashModeRef={slashModeRef}
+            modelName={currentModel}
+            disabled={state.isLoading}
+            width={Math.min(width - 4, 80)}
+            placeholder="Ask anything..."
+          />
+        </WelcomeScreen>
+      </Box>
+    );
+  }
+
+  // Chat view layout (with messages)
+  const inputBoxHeight = 4;
+  const sessionHeaderHeight = 1;
   const messageListHeight = Math.max(
     5,
-    height - headerHeight - inputHeight - statusHeight - 2,
+    height - inputBoxHeight - sessionHeaderHeight - 3,
   );
 
   return (
     <Box flexDirection="column" width={width} height={height}>
-      {/* Header */}
-      <Box
-        borderStyle="round"
-        borderColor="cyan"
-        paddingX={1}
-        height={headerHeight}
-      >
-        <Text bold color="cyan">
-          Bashio Chat
-        </Text>
-        <Text> | </Text>
-        <Text color="yellow">{currentModel}</Text>
-        <Text dimColor> | Ctrl+O: sessions | Ctrl+P: model | Ctrl+C: exit</Text>
+      {/* Session Header */}
+      <Box paddingX={1} marginTop={1}>
+        <SessionHeader
+          sessionTitle={currentSession?.title ?? 'New Chat'}
+          width={width - 2}
+        />
       </Box>
 
       {/* Message List */}
@@ -324,6 +380,7 @@ function ChatApp() {
           isLoading={state.isLoading}
           height={messageListHeight}
           width={width - 2}
+          slashModeRef={slashModeRef}
         />
       </Box>
 
@@ -335,38 +392,37 @@ function ChatApp() {
       )}
 
       {/* Input Box */}
-      <Box borderStyle="round" borderColor="gray">
-        <InputBox onSubmit={handleSubmit} disabled={state.isLoading} />
-      </Box>
-
-      {/* Status bar */}
       <Box paddingX={1}>
-        <Text dimColor>
-          Enter: send | Arrows/PgUp/PgDn: scroll | Select text to copy | Ctrl+O:
-          sessions | Ctrl+C: exit
-        </Text>
+        <InputBox
+          onSubmit={handleSubmit}
+          onSlashCommand={handleSlashCommand}
+          slashModeRef={slashModeRef}
+          modelName={currentModel}
+          disabled={state.isLoading}
+          width={width - 2}
+        />
       </Box>
     </Box>
   );
 }
 
 export async function runChat(): Promise<number> {
-  // Enter alternate screen buffer (like vim/nano)
   process.stdout.write('\x1b[?1049h');
-  // Hide cursor initially
   process.stdout.write('\x1b[?25l');
-  // Clear screen and move to top-left
   process.stdout.write('\x1b[2J\x1b[H');
 
-  const instance = render(<ChatApp />, {
-    exitOnCtrlC: false,
-  });
+  const instance = render(
+    <MouseProvider>
+      <ChatApp />
+    </MouseProvider>,
+    {
+      exitOnCtrlC: false,
+    },
+  );
 
   await instance.waitUntilExit();
 
-  // Show cursor again
   process.stdout.write('\x1b[?25h');
-  // Exit alternate screen buffer (restore previous screen)
   process.stdout.write('\x1b[?1049l');
 
   return 0;

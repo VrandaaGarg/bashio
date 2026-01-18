@@ -71,13 +71,13 @@ export class StatsCommand extends Command {
         title: 'Most Used Commands',
         columns: [
           { header: '#', key: 'rank', width: 3, align: 'right' },
-          { header: 'Command', key: 'command', width: 45, color: pc.cyan },
+          { header: 'Command', key: 'command', width: 45, color: pc.yellow },
           { header: 'Uses', key: 'uses', width: 8, align: 'right' },
           {
             header: 'Source',
             key: 'source',
             width: 10,
-            color: (v) => (v.trim() === 'ai' ? pc.blue(v) : pc.cyan(v)),
+            color: (v) => (v.trim() === 'ai' ? pc.blue(v) : pc.yellow(v)),
           },
         ],
         data: stats.topQueries.map((q, i) => ({

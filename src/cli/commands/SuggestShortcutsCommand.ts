@@ -52,7 +52,7 @@ export class SuggestShortcutsCommand extends Command {
 
     for (const suggestion of suggestions) {
       console.log(pc.dim('  ────────────────────────────────────────'));
-      console.log(`  ${pc.yellow('Command:')} ${pc.cyan(suggestion.command)}`);
+      console.log(`  ${pc.yellow('Command:')} ${pc.white(suggestion.command)}`);
       console.log(
         `  ${pc.yellow('Used:')} ${pc.white(suggestion.useCount.toString())} times`,
       );
@@ -227,7 +227,7 @@ export class SuggestShortcutsCommand extends Command {
     console.log(
       pc.red('  │') +
         pc.gray(cmdLabel) +
-        pc.cyan(cmdValue) +
+        pc.yellow(cmdValue) +
         ' '.repeat(Math.max(0, cmdPadding)) +
         pc.red('│'),
     );

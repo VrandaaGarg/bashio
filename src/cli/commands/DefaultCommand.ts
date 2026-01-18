@@ -133,13 +133,13 @@ export class DefaultCommand extends Command {
   private showHelp(): void {
     console.log(pc.bold('\n  Bashio - Natural language to shell commands\n'));
     console.log('  Usage:');
-    console.log(pc.cyan('    b <natural language query>'));
-    console.log(pc.cyan('    b <shortcut> [arguments]'));
+    console.log(pc.yellow('    b <natural language query>'));
+    console.log(pc.yellow('    b <shortcut> [arguments]'));
     console.log();
     console.log('  Examples:');
     console.log(pc.gray('    b find all files larger than 100mb'));
     console.log(pc.gray('    b kill whatever is running on port 3000'));
-    console.log(pc.gray('    b killport 3000') + pc.cyan('  (shortcut)'));
+    console.log(pc.gray('    b killport 3000') + pc.yellow('  (shortcut)'));
     console.log();
     console.log('  Commands:');
     console.log(pc.gray('    b --chat              Start interactive chat'));
@@ -367,7 +367,7 @@ export class DefaultCommand extends Command {
     }
     console.log();
     console.log(pc.gray('  Command:'));
-    console.log(pc.cyan(`  ${command}`));
+    console.log(pc.yellow(`  ${command}`));
     console.log();
 
     return confirm({

@@ -31,10 +31,10 @@ export class ConfigCommand extends Command {
 
     console.log(pc.bold('\n  Bashio Configuration\n'));
     console.log(
-      `  Active Provider: ${pc.cyan(PROVIDER_DISPLAY_NAMES[config.activeProvider])}`,
+      `  Active Provider: ${pc.yellow(PROVIDER_DISPLAY_NAMES[config.activeProvider])}`,
     );
     console.log(
-      `  Model:           ${pc.cyan(activeSettings?.model || 'N/A')}`,
+      `  Model:           ${pc.yellow(activeSettings?.model || 'N/A')}`,
     );
 
     // Show all configured providers

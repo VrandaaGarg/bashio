@@ -1,8 +1,18 @@
+import { useOnWheel } from '@ink-tools/ink-mouse';
 import { highlight } from 'cli-highlight';
-import { Box, Text, useInput } from 'ink';
+import { Box, type DOMElement, Text, useInput } from 'ink';
 import { ScrollView, type ScrollViewRef } from 'ink-scroll-view';
+import Spinner from 'ink-spinner';
 import type React from 'react';
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 import type { ChatMessage } from '../../providers/base.js';
 
 interface MessageListProps {
@@ -11,6 +21,7 @@ interface MessageListProps {
   isLoading: boolean;
   height: number;
   width: number;
+  slashModeRef: React.MutableRefObject<boolean>;
 }
 
 export interface MessageListHandle {
@@ -101,112 +112,140 @@ function parseContent(content: string, maxWidth: number): React.ReactNode[] {
       ];
 }
 
-function Message({ message, width }: { message: ChatMessage; width: number }) {
+const Message = memo(function Message({
+  message,
+  width,
+}: {
+  message: ChatMessage;
+  width: number;
+}) {
   const isUser = message.role === 'user';
+  const parsedContent = useMemo(
+    () => parseContent(message.content, width - 4),
+    [message.content, width],
+  );
 
   return (
     <Box flexDirection="column" marginY={1} width={width}>
       <Box>
-        <Text bold color={isUser ? 'cyan' : 'green'}>
-          {isUser ? 'You' : 'Assistant'}:
+        <Text bold color={isUser ? '#eea154ff' : 'yellow'}>
+          {isUser ? 'You' : 'Bashio'}:
         </Text>
       </Box>
       <Box flexDirection="column" paddingLeft={2}>
-        {parseContent(message.content, width - 4)}
+        {parsedContent}
       </Box>
     </Box>
   );
-}
+});
 
-export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
-  function MessageList(
-    { messages, currentResponse, isLoading, height, width },
+const EmptyState = memo(function EmptyState({ height }: { height: number }) {
+  return (
+    <Box
+      flexDirection="column"
+      height={height}
+      paddingX={1}
+      justifyContent="center"
+      alignItems="center"
+    >
+      <Text dimColor>Start a conversation by typing a message below.</Text>
+      <Text dimColor>Type / for commands or Ctrl+P to switch models.</Text>
+    </Box>
+  );
+});
+
+export const MessageList = memo(
+  forwardRef<MessageListHandle, MessageListProps>(function MessageList(
+    { messages, currentResponse, isLoading, height, width, slashModeRef },
     ref,
   ) {
     const scrollRef = useRef<ScrollViewRef>(null);
+    const mouseRef = useRef<DOMElement>(null);
 
-    // Bounded scroll helper
-    const boundedScrollBy = (delta: number) => {
+    const boundedScrollBy = useCallback((delta: number) => {
       const sv = scrollRef.current;
       if (!sv) return;
-
       const currentOffset = sv.getScrollOffset();
       const maxOffset = sv.getBottomOffset();
-
-      // Calculate new offset with bounds
       const newOffset = Math.max(0, Math.min(maxOffset, currentOffset + delta));
       sv.scrollTo(newOffset);
-    };
+    }, []);
 
-    const boundedScrollToBottom = () => {
+    const boundedScrollToBottom = useCallback(() => {
       const sv = scrollRef.current;
       if (!sv) return;
-
       const maxOffset = sv.getBottomOffset();
       sv.scrollTo(Math.max(0, maxOffset));
-    };
+    }, []);
 
-    useImperativeHandle(ref, () => ({
-      scrollBy: boundedScrollBy,
-      scrollToBottom: boundedScrollToBottom,
-    }));
+    useImperativeHandle(
+      ref,
+      () => ({
+        scrollBy: boundedScrollBy,
+        scrollToBottom: boundedScrollToBottom,
+      }),
+      [boundedScrollBy, boundedScrollToBottom],
+    );
 
-    // Auto-scroll to bottom when new content arrives
     const messagesCount = messages.length;
     const hasResponse = Boolean(currentResponse);
+
     // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally re-run on content changes
     useEffect(() => {
       const timer = setTimeout(() => {
         boundedScrollToBottom();
       }, 10);
       return () => clearTimeout(timer);
-    }, [messagesCount, hasResponse]);
+    }, [messagesCount, hasResponse, boundedScrollToBottom]);
 
-    // Handle keyboard scroll input
+    // Scroll input - reads ref directly, no re-render when slash mode changes
     useInput((input, key) => {
-      if (key.upArrow) {
-        boundedScrollBy(-1);
-      }
-      if (key.downArrow) {
-        boundedScrollBy(1);
-      }
-      if (key.pageUp) {
-        boundedScrollBy(-Math.floor(height / 2));
-      }
-      if (key.pageDown) {
-        boundedScrollBy(Math.floor(height / 2));
-      }
-      if (input === 'k' && key.ctrl) {
+      // Skip scrolling when slash menu is open (read from ref)
+      if (slashModeRef.current) return;
+
+      // Arrow keys for scrolling
+      if (key.upArrow) boundedScrollBy(-1);
+      if (key.downArrow) boundedScrollBy(1);
+
+      // Page up/down for faster scrolling
+      if (key.pageUp) boundedScrollBy(-Math.floor(height / 2));
+      if (key.pageDown) boundedScrollBy(Math.floor(height / 2));
+
+      // Vim-style: Ctrl+K/J for scrolling (3 lines at a time)
+      if (input === 'k' && key.ctrl) boundedScrollBy(-3);
+      // Note: Ctrl+J is used for newline in InputBox, so use Alt or just k/j
+
+      // Simple j/k for scrolling when not typing (meta key as modifier)
+      if (input === 'k' && key.meta) boundedScrollBy(-3);
+      if (input === 'j' && key.meta) boundedScrollBy(3);
+    });
+
+    // Mouse wheel scrolling
+    useOnWheel(mouseRef, (event) => {
+      if (event.button === 'wheel-up') {
         boundedScrollBy(-3);
-      }
-      if (input === 'j' && key.ctrl) {
+      } else if (event.button === 'wheel-down') {
         boundedScrollBy(3);
       }
     });
 
+    const streamingContent = useMemo(
+      () => (currentResponse ? parseContent(currentResponse, width - 4) : null),
+      [currentResponse, width],
+    );
+
     if (messages.length === 0 && !currentResponse) {
-      return (
-        <Box
-          flexDirection="column"
-          height={height}
-          paddingX={1}
-          justifyContent="center"
-          alignItems="center"
-        >
-          <Text dimColor>Start a conversation by typing a message below.</Text>
-          <Text dimColor>Press Ctrl+P to switch models.</Text>
-        </Box>
-      );
+      return <EmptyState height={height} />;
     }
 
     return (
-      <Box height={height} paddingX={1} overflow="hidden">
-        <ScrollView ref={scrollRef}>
+      <Box ref={mouseRef} height={height} paddingX={1} overflow="hidden">
+        <ScrollView ref={scrollRef} height={height}>
           {messages.map((msg, i) => (
             <Message key={`msg-${i}-${msg.role}`} message={msg} width={width} />
           ))}
 
-          {currentResponse && (
+          {streamingContent && (
             <Box
               key="streaming"
               flexDirection="column"
@@ -214,12 +253,12 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
               width={width}
             >
               <Box>
-                <Text bold color="green">
-                  Assistant:
+                <Text bold color="yellow">
+                  Bashio:
                 </Text>
               </Box>
               <Box flexDirection="column" paddingLeft={2}>
-                {parseContent(currentResponse, width - 4)}
+                {streamingContent}
                 <Text color="yellow">|</Text>
               </Box>
             </Box>
@@ -227,11 +266,14 @@ export const MessageList = forwardRef<MessageListHandle, MessageListProps>(
 
           {isLoading && !currentResponse && (
             <Box key="loading" marginY={1}>
-              <Text color="yellow">Thinking...</Text>
+              <Text color="#eea154ff">
+                <Spinner type="dots" />
+              </Text>
+              <Text color="#eea154ff"> Thinking...</Text>
             </Box>
           )}
         </ScrollView>
       </Box>
     );
-  },
+  }),
 );

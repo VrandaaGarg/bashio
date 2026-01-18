@@ -65,7 +65,7 @@ export class HistoryCommand extends Command {
           header: 'Source',
           key: 'source',
           width: 8,
-          color: (v) => (v.trim() === 'ai' ? pc.blue(v) : pc.cyan(v)),
+          color: (v) => (v.trim() === 'ai' ? pc.blue(v) : pc.yellow(v)),
         },
         { header: 'Status', key: 'status', width: 10 },
         { header: 'Time', key: 'time', width: 10 },

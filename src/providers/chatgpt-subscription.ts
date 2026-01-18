@@ -12,10 +12,11 @@ import {
 } from './base.js';
 
 // Codex backend API message format (input must be array of messages)
+// User messages use 'input_text', assistant messages use 'output_text'
 interface CodexInputMessage {
   type: 'message';
   role: 'user' | 'assistant';
-  content: Array<{ type: 'input_text'; text: string }>;
+  content: Array<{ type: 'input_text' | 'output_text'; text: string }>;
 }
 
 // Codex backend API request format
@@ -275,7 +276,12 @@ export class ChatGPTSubscriptionProvider implements AIProvider {
       input: messages.map((m) => ({
         type: 'message' as const,
         role: m.role,
-        content: [{ type: 'input_text' as const, text: m.content }],
+        content: [
+          {
+            type: m.role === 'user' ? 'input_text' : 'output_text',
+            text: m.content,
+          },
+        ],
       })),
       store: false,
       stream: true,

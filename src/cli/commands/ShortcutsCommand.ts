@@ -33,7 +33,7 @@ export class ShortcutsCommand extends Command {
     renderTable({
       title: 'Your Shortcuts',
       columns: [
-        { header: 'Name', key: 'name', width: 15, color: pc.cyan },
+        { header: 'Name', key: 'name', width: 15, color: pc.yellow },
         {
           header: 'Command Template',
           key: 'template',

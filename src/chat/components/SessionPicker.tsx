@@ -109,11 +109,11 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
         flexDirection="column"
         width={Math.min(80, width - 4)}
         borderStyle="double"
-        borderColor="cyan"
+        borderColor="#eea154ff"
       >
         {/* Header */}
         <Box paddingX={2} paddingY={1} justifyContent="space-between">
-          <Text bold color="cyan">
+          <Text bold color="#eea154ff">
             Chat Sessions
           </Text>
           <Text dimColor>Esc: close | Enter: select | Ctrl+D: delete</Text>
@@ -134,7 +134,7 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
               return (
                 <Box key="new-chat">
                   <Text
-                    color={isSelected ? 'cyan' : 'green'}
+                    color={isSelected ? '#eea154ff' : 'green'}
                     bold={isSelected}
                     inverse={isSelected}
                   >
@@ -154,7 +154,7 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
             return (
               <Box key={session.id}>
                 <Text
-                  color={isSelected ? 'cyan' : undefined}
+                  color={isSelected ? '#eea154ff' : undefined}
                   bold={isSelected}
                   inverse={isSelected}
                 >

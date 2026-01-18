@@ -14,6 +14,7 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../../providers/index.js';
+import { bashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
 
@@ -151,7 +152,7 @@ export class ModelCommand extends Command {
       // Add option to configure new provider
       providerChoices.push({
         value: '__add_new__' as ProviderName,
-        name: pc.cyan('+ Add new provider...'),
+        name: pc.yellow('+ Add new provider...'),
         description: 'Configure a new AI provider',
       });
 
@@ -160,6 +161,7 @@ export class ModelCommand extends Command {
       >({
         message: 'Select provider:',
         choices: providerChoices,
+        theme: bashioTheme,
       });
 
       if (selectedProvider === '__add_new__') {
@@ -191,6 +193,7 @@ export class ModelCommand extends Command {
           message: 'Select model:',
           choices: availableModels.map((m) => ({ value: m, name: m })),
           default: currentModel,
+          theme: bashioTheme,
         });
       } else {
         const models = getModelsForProvider(selectedProvider);
@@ -198,6 +201,7 @@ export class ModelCommand extends Command {
           message: 'Select model:',
           choices: models.map((m) => ({ value: m.value, name: m.label })),
           default: currentModel,
+          theme: bashioTheme,
         });
       }
 
