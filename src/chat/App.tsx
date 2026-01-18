@@ -1,3 +1,4 @@
+import { MouseProvider } from '@ink-tools/ink-mouse';
 import { Box, render, Text, useApp, useInput, useStdout } from 'ink';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { runAuthSetup } from '../core/auth.js';
@@ -21,7 +22,6 @@ import {
   saveSession,
 } from './utils/sessions.js';
 import type { SlashCommandAction } from './utils/slashCommands.js';
-import { createSyncOutputStream } from './utils/syncOutput.js';
 
 export type { ChatMessage };
 
@@ -374,6 +374,7 @@ function ChatApp() {
           isLoading={state.isLoading}
           height={messageListHeight}
           width={width - 2}
+          slashModeRef={slashModeRef}
         />
       </Box>
 
@@ -415,21 +416,14 @@ export async function runChat(): Promise<number> {
   process.stdout.write('\x1b[?25l');
   process.stdout.write('\x1b[2J\x1b[H');
 
-  // Create synchronized output stream to prevent flickering in iTerm2
-  // This batches terminal updates and wraps them with sync sequences
-  const syncStdout = createSyncOutputStream(
-    process.stdout,
-  ) as unknown as NodeJS.WriteStream;
-
-  const instance = render(<ChatApp />, {
-    stdout: syncStdout,
-    exitOnCtrlC: false,
-    patchConsole: false,
-    // Enable incremental rendering - only updates changed lines instead of full redraw
-    incrementalRendering: true,
-    // Lower FPS to reduce render frequency (default is 30)
-    maxFps: 20,
-  });
+  const instance = render(
+    <MouseProvider>
+      <ChatApp />
+    </MouseProvider>,
+    {
+      exitOnCtrlC: false,
+    },
+  );
 
   await instance.waitUntilExit();
 

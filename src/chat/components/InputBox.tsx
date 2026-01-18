@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import type React from 'react';
-import { memo, useMemo, useReducer, useRef } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import {
   filterCommands,
   type SlashCommandAction,
@@ -17,79 +17,6 @@ interface InputBoxProps {
   placeholder?: string;
 }
 
-// Static cursor character
-const CURSOR = '▋';
-
-// Batched state to reduce re-renders
-interface InputState {
-  value: string;
-  cursorPos: number;
-  menuIndex: number;
-}
-
-type InputAction =
-  | { type: 'SET_VALUE'; value: string; cursorPos: number }
-  | { type: 'SET_CURSOR'; cursorPos: number }
-  | { type: 'SET_MENU_INDEX'; menuIndex: number }
-  | { type: 'RESET' }
-  | { type: 'INSERT_CHAR'; char: string }
-  | { type: 'DELETE_CHAR' }
-  | { type: 'INSERT_NEWLINE' };
-
-function inputReducer(state: InputState, action: InputAction): InputState {
-  switch (action.type) {
-    case 'SET_VALUE':
-      return { ...state, value: action.value, cursorPos: action.cursorPos };
-    case 'SET_CURSOR':
-      return { ...state, cursorPos: action.cursorPos };
-    case 'SET_MENU_INDEX':
-      return { ...state, menuIndex: action.menuIndex };
-    case 'RESET':
-      return { value: '', cursorPos: 0, menuIndex: 0 };
-    case 'INSERT_CHAR': {
-      const newValue =
-        state.value.slice(0, state.cursorPos) +
-        action.char +
-        state.value.slice(state.cursorPos);
-      return {
-        value: newValue,
-        cursorPos: state.cursorPos + 1,
-        menuIndex: 0,
-      };
-    }
-    case 'DELETE_CHAR': {
-      if (state.cursorPos <= 0) return state;
-      const newValue =
-        state.value.slice(0, state.cursorPos - 1) +
-        state.value.slice(state.cursorPos);
-      return {
-        value: newValue,
-        cursorPos: state.cursorPos - 1,
-        menuIndex: 0,
-      };
-    }
-    case 'INSERT_NEWLINE': {
-      const newValue =
-        state.value.slice(0, state.cursorPos) +
-        '\n' +
-        state.value.slice(state.cursorPos);
-      return {
-        ...state,
-        value: newValue,
-        cursorPos: state.cursorPos + 1,
-      };
-    }
-    default:
-      return state;
-  }
-}
-
-const initialState: InputState = {
-  value: '',
-  cursorPos: 0,
-  menuIndex: 0,
-};
-
 export const InputBox = memo(function InputBox({
   onSubmit,
   onSlashCommand,
@@ -99,8 +26,19 @@ export const InputBox = memo(function InputBox({
   width = 50,
   placeholder = 'Ask anything...',
 }: InputBoxProps) {
-  const [state, dispatch] = useReducer(inputReducer, initialState);
-  const { value, cursorPos, menuIndex } = state;
+  const [value, setValue] = useState('');
+  const [cursorPos, setCursorPos] = useState(0);
+  const [menuIndex, setMenuIndex] = useState(0);
+  const [cursorVisible, setCursorVisible] = useState(true);
+
+  // Blinking cursor effect
+  useEffect(() => {
+    if (disabled) return;
+    const interval = setInterval(() => {
+      setCursorVisible((v) => !v);
+    }, 530);
+    return () => clearInterval(interval);
+  }, [disabled]);
 
   const isSlashMode = value.startsWith('/') && !value.includes('\n');
   const filteredCommands = useMemo(
@@ -120,27 +58,18 @@ export const InputBox = memo(function InputBox({
 
       if (isSlashMode && filteredCommands.length > 0) {
         if (key.upArrow) {
-          dispatch({
-            type: 'SET_MENU_INDEX',
-            menuIndex: Math.max(0, menuIndex - 1),
-          });
+          setMenuIndex((i) => Math.max(0, i - 1));
           return;
         }
         if (key.downArrow) {
-          dispatch({
-            type: 'SET_MENU_INDEX',
-            menuIndex: Math.min(filteredCommands.length - 1, menuIndex + 1),
-          });
+          setMenuIndex((i) => Math.min(filteredCommands.length - 1, i + 1));
           return;
         }
         if (key.tab) {
           const selected = filteredCommands[menuIndex];
           if (selected) {
-            dispatch({
-              type: 'SET_VALUE',
-              value: `/${selected.name}`,
-              cursorPos: selected.name.length + 1,
-            });
+            setValue(`/${selected.name}`);
+            setCursorPos(selected.name.length + 1);
           }
           return;
         }
@@ -148,7 +77,9 @@ export const InputBox = memo(function InputBox({
           const selected = filteredCommands[menuIndex];
           if (selected) {
             onSlashCommand(selected.action);
-            dispatch({ type: 'RESET' });
+            setValue('');
+            setCursorPos(0);
+            setMenuIndex(0);
           }
           return;
         }
@@ -157,23 +88,32 @@ export const InputBox = memo(function InputBox({
       if (key.return && !key.shift) {
         if (value.trim()) {
           onSubmit(value);
-          dispatch({ type: 'RESET' });
+          setValue('');
+          setCursorPos(0);
+          setMenuIndex(0);
         }
         return;
       }
 
       if (key.escape && isSlashMode) {
-        dispatch({ type: 'RESET' });
+        setValue('');
+        setCursorPos(0);
+        setMenuIndex(0);
         return;
       }
 
       if ((key.return && key.shift) || (key.ctrl && input === 'j')) {
-        dispatch({ type: 'INSERT_NEWLINE' });
+        setValue((v) => `${v.slice(0, cursorPos)}\n${v.slice(cursorPos)}`);
+        setCursorPos((p) => p + 1);
         return;
       }
 
       if (key.backspace || key.delete) {
-        dispatch({ type: 'DELETE_CHAR' });
+        if (cursorPos > 0) {
+          setValue((v) => v.slice(0, cursorPos - 1) + v.slice(cursorPos));
+          setCursorPos((p) => p - 1);
+          setMenuIndex(0);
+        }
         return;
       }
 
@@ -181,15 +121,9 @@ export const InputBox = memo(function InputBox({
         if (key.ctrl) {
           const before = value.slice(0, cursorPos);
           const match = before.match(/\S+\s*$/);
-          dispatch({
-            type: 'SET_CURSOR',
-            cursorPos: match ? cursorPos - match[0].length : 0,
-          });
+          setCursorPos((p) => (match ? p - match[0].length : 0));
         } else {
-          dispatch({
-            type: 'SET_CURSOR',
-            cursorPos: Math.max(0, cursorPos - 1),
-          });
+          setCursorPos((p) => Math.max(0, p - 1));
         }
         return;
       }
@@ -198,38 +132,36 @@ export const InputBox = memo(function InputBox({
         if (key.ctrl) {
           const after = value.slice(cursorPos);
           const match = after.match(/^\s*\S+/);
-          dispatch({
-            type: 'SET_CURSOR',
-            cursorPos: match ? cursorPos + match[0].length : value.length,
-          });
+          setCursorPos((p) => (match ? p + match[0].length : value.length));
         } else {
-          dispatch({
-            type: 'SET_CURSOR',
-            cursorPos: Math.min(value.length, cursorPos + 1),
-          });
+          setCursorPos((p) => Math.min(value.length, p + 1));
         }
         return;
       }
 
       if (key.ctrl && input === 'a') {
-        dispatch({ type: 'SET_CURSOR', cursorPos: 0 });
+        setCursorPos(0);
         return;
       }
 
       if (key.ctrl && input === 'e') {
-        dispatch({ type: 'SET_CURSOR', cursorPos: value.length });
+        setCursorPos(value.length);
         return;
       }
 
       if (key.ctrl && input === 'u') {
-        dispatch({ type: 'RESET' });
+        setValue('');
+        setCursorPos(0);
+        setMenuIndex(0);
         return;
       }
 
       if (input && !key.ctrl && !key.meta && input.length === 1) {
         const charCode = input.charCodeAt(0);
         if (charCode >= 32) {
-          dispatch({ type: 'INSERT_CHAR', char: input });
+          setValue((v) => v.slice(0, cursorPos) + input + v.slice(cursorPos));
+          setCursorPos((p) => p + 1);
+          setMenuIndex(0);
         }
       }
     },
@@ -243,6 +175,9 @@ export const InputBox = memo(function InputBox({
 
   const menuHeight =
     filteredCommands.length > 0 ? Math.min(filteredCommands.length, 5) + 2 : 3;
+
+  // Blinking cursor character
+  const cursor = cursorVisible ? '▋' : ' ';
 
   return (
     <Box flexDirection="column" width={width}>
@@ -269,7 +204,7 @@ export const InputBox = memo(function InputBox({
         <Box>
           {isEmpty && !disabled ? (
             <Text>
-              <Text color="white">{CURSOR}</Text>
+              <Text color="white">{cursor}</Text>
               <Text dimColor>{placeholder}</Text>
             </Text>
           ) : (
@@ -277,7 +212,7 @@ export const InputBox = memo(function InputBox({
               color={disabled ? 'gray' : isSlashMode ? '#eea154ff' : 'white'}
             >
               {beforeCursor}
-              {!disabled && <Text color="white">{CURSOR}</Text>}
+              {!disabled && <Text color="white">{cursor}</Text>}
               {atCursor !== ' ' && atCursor}
               {afterCursor.replace(/\n/g, '↵')}
             </Text>

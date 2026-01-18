@@ -1,5 +1,6 @@
+import { useOnWheel } from '@ink-tools/ink-mouse';
 import { highlight } from 'cli-highlight';
-import { Box, Text } from 'ink';
+import { Box, type DOMElement, Text, useInput } from 'ink';
 import { ScrollView, type ScrollViewRef } from 'ink-scroll-view';
 import Spinner from 'ink-spinner';
 import type React from 'react';
@@ -20,6 +21,7 @@ interface MessageListProps {
   isLoading: boolean;
   height: number;
   width: number;
+  slashModeRef: React.MutableRefObject<boolean>;
 }
 
 export interface MessageListHandle {
@@ -563,10 +565,11 @@ const EmptyState = memo(function EmptyState({ height }: { height: number }) {
 
 export const MessageList = memo(
   forwardRef<MessageListHandle, MessageListProps>(function MessageList(
-    { messages, currentResponse, isLoading, height, width },
+    { messages, currentResponse, isLoading, height, width, slashModeRef },
     ref,
   ) {
     const scrollRef = useRef<ScrollViewRef>(null);
+    const mouseRef = useRef<DOMElement>(null);
 
     const boundedScrollBy = useCallback((delta: number) => {
       const sv = scrollRef.current;
@@ -604,6 +607,37 @@ export const MessageList = memo(
       return () => clearTimeout(timer);
     }, [messagesCount, hasResponse, boundedScrollToBottom]);
 
+    // Scroll input - reads ref directly, no re-render when slash mode changes
+    useInput((input, key) => {
+      // Skip scrolling when slash menu is open (read from ref)
+      if (slashModeRef.current) return;
+
+      // Arrow keys for scrolling
+      if (key.upArrow) boundedScrollBy(-1);
+      if (key.downArrow) boundedScrollBy(1);
+
+      // Page up/down for faster scrolling
+      if (key.pageUp) boundedScrollBy(-Math.floor(height / 2));
+      if (key.pageDown) boundedScrollBy(Math.floor(height / 2));
+
+      // Vim-style: Ctrl+K/J for scrolling (3 lines at a time)
+      if (input === 'k' && key.ctrl) boundedScrollBy(-3);
+      // Note: Ctrl+J is used for newline in InputBox, so use Alt or just k/j
+
+      // Simple j/k for scrolling when not typing (meta key as modifier)
+      if (input === 'k' && key.meta) boundedScrollBy(-3);
+      if (input === 'j' && key.meta) boundedScrollBy(3);
+    });
+
+    // Mouse wheel scrolling
+    useOnWheel(mouseRef, (event) => {
+      if (event.button === 'wheel-up') {
+        boundedScrollBy(-3);
+      } else if (event.button === 'wheel-down') {
+        boundedScrollBy(3);
+      }
+    });
+
     const streamingContent = useMemo(
       () => (currentResponse ? parseContent(currentResponse, width - 4) : null),
       [currentResponse, width],
@@ -614,7 +648,7 @@ export const MessageList = memo(
     }
 
     return (
-      <Box height={height} paddingX={1} overflow="hidden">
+      <Box ref={mouseRef} height={height} paddingX={1} overflow="hidden">
         <ScrollView ref={scrollRef} height={height}>
           {messages.map((msg, i) => (
             <Message key={`msg-${i}-${msg.role}`} message={msg} width={width} />
