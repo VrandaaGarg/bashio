@@ -2,6 +2,7 @@ import { input } from '@inquirer/prompts';
 import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { addShortcut, getShortcut } from '../../core/shortcuts.js';
+import { bashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 
 export class AddShortcutCommand extends Command {
@@ -45,6 +46,7 @@ export class AddShortcutCommand extends Command {
           if (value.includes(' ')) return 'Name cannot contain spaces';
           return true;
         },
+        theme: bashioTheme,
       });
 
       // Check if shortcut already exists
@@ -60,10 +62,12 @@ export class AddShortcutCommand extends Command {
           if (!value.trim()) return 'Template is required';
           return true;
         },
+        theme: bashioTheme,
       });
 
       const argsInput = await input({
         message: 'Arguments (comma-separated, or leave empty):',
+        theme: bashioTheme,
       });
 
       shortcutArgs = argsInput
@@ -75,6 +79,7 @@ export class AddShortcutCommand extends Command {
 
       shortcutDescription = await input({
         message: 'Description (optional):',
+        theme: bashioTheme,
       });
     }
 

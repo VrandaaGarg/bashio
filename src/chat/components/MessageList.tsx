@@ -87,7 +87,7 @@ function parseInlineMarkdown(
 function parseLine(
   line: string,
   keyIndex: number,
-  maxWidth: number,
+  _maxWidth: number,
 ): React.ReactNode {
   const trimmed = line.trimStart();
   const indent = line.length - trimmed.length;

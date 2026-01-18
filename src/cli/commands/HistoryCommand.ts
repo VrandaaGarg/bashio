@@ -2,6 +2,7 @@ import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { getRecentHistory, searchHistory } from '../../core/history.js';
 import type { HistoryEntry } from '../../core/types.js';
+import { orange } from '../../utils/colors.js';
 import { renderTable } from '../../utils/table.js';
 
 export class HistoryCommand extends Command {
@@ -59,13 +60,13 @@ export class HistoryCommand extends Command {
       title,
       columns: [
         { header: '#', key: 'num', width: 3, align: 'right' },
-        { header: 'Command', key: 'command', width: 35, color: pc.yellow },
+        { header: 'Command', key: 'command', width: 35, color: orange },
         { header: 'Query', key: 'query', width: 25, color: pc.gray },
         {
           header: 'Source',
           key: 'source',
           width: 8,
-          color: (v) => (v.trim() === 'ai' ? pc.blue(v) : pc.yellow(v)),
+          color: (v) => pc.yellow(v),
         },
         { header: 'Status', key: 'status', width: 10 },
         { header: 'Time', key: 'time', width: 10 },
@@ -83,7 +84,7 @@ export class HistoryCommand extends Command {
       return `${pc.gray('○')} skipped`;
     }
     if (entry.exitCode === 0) {
-      return `${pc.green('✓')} success`;
+      return `${orange('✓')} success`;
     }
     return `${pc.red('✗')} exit:${entry.exitCode}`;
   }

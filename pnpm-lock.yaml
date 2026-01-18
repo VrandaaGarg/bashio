@@ -17,6 +17,9 @@ importers:
       better-sqlite3:
         specifier: ^12.6.0
         version: 12.6.0
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
       cli-highlight:
         specifier: ^2.1.11
         version: 2.1.11

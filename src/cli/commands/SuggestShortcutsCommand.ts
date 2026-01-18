@@ -7,6 +7,7 @@ import {
 } from '../../core/learning.js';
 import { addShortcut, getShortcut } from '../../core/shortcuts.js';
 import type { ShortcutDefinition } from '../../core/types.js';
+import { bashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 
 type SuggestionAction = 'yes' | 'no' | 'exit';
@@ -87,6 +88,7 @@ export class SuggestShortcutsCommand extends Command {
           const parameterize = await confirm({
             message: 'Make numbers into parameters?',
             default: true,
+            theme: bashioTheme,
           });
 
           if (parameterize) {
@@ -136,6 +138,7 @@ export class SuggestShortcutsCommand extends Command {
     const answer = await input({
       message: 'Create shortcut? (y/n/e)',
       default: 'y',
+      theme: bashioTheme,
     });
 
     const normalized = answer.toLowerCase().trim();
@@ -159,6 +162,7 @@ export class SuggestShortcutsCommand extends Command {
       const enteredName = await input({
         message: 'Shortcut name:',
         default: defaultName,
+        theme: bashioTheme,
       });
 
       const finalName = enteredName.trim();

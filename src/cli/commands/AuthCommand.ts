@@ -1,6 +1,6 @@
 import { Command } from 'clipanion';
-import pc from 'picocolors';
 import { runAuthSetup } from '../../core/auth.js';
+import { orange } from '../../utils/colors.js';
 
 export class AuthCommand extends Command {
   static paths = [['auth'], ['--auth']];
@@ -15,8 +15,8 @@ export class AuthCommand extends Command {
 
     if (success) {
       console.log(
-        pc.green("You're all set! Try:"),
-        pc.yellow('b find all png files'),
+        orange("You're all set! Try:"),
+        orange('b find all png files'),
       );
       console.log();
     }

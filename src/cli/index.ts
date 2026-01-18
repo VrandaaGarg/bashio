@@ -4,6 +4,7 @@ import updateNotifier from 'update-notifier';
 import { loadConfig } from '../core/config.js';
 import { initDatabase } from '../core/database.js';
 import { cleanupHistory, shouldRunCleanup } from '../core/history.js';
+import { orange } from '../utils/colors.js';
 
 const pkg = {
   name: 'bashio',
@@ -19,7 +20,6 @@ const notifier = updateNotifier({
 // Custom update notification matching welcome banner theme
 if (notifier.update) {
   const { current, latest } = notifier.update;
-  const orange = pc.yellow;
   const width = 44;
 
   const ansiRegex = new RegExp(
@@ -40,9 +40,9 @@ if (notifier.update) {
   console.log(line(''));
   console.log(line(pc.bold('     Bashio Update Available!')));
   console.log(line(''));
-  console.log(line(`   ${pc.dim(current)} → ${pc.green(pc.bold(latest))}`));
+  console.log(line(`   ${pc.dim(current)} → ${orange(pc.bold(latest))}`));
   console.log(line(''));
-  console.log(line(`   Run: ${pc.yellow('npm i -g bashio@latest')}`));
+  console.log(line(`   Run: ${orange('npm i -g bashio@latest')}`));
   console.log(line(''));
   console.log(orange(`  └${'─'.repeat(width)}┘`));
   console.log();

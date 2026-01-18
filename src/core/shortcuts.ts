@@ -1,6 +1,7 @@
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { input } from '@inquirer/prompts';
+import { bashioTheme } from '../utils/inquirerTheme.js';
 import { ensureConfigDir, getConfigDir } from './config.js';
 import type {
   ResolvedShortcut,
@@ -146,6 +147,7 @@ export async function tryResolveShortcut(
       const argName = requiredArgs[i];
       const value = await input({
         message: `Enter ${argName}:`,
+        theme: bashioTheme,
       });
       finalArgs.push(value);
     }

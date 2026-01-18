@@ -68,27 +68,21 @@ function ChatApp() {
   }, [stdout]);
 
   useEffect(() => {
-    const init = async () => {
-      if (!configExists()) {
-        const success = await runAuthSetup();
-        if (!success) {
-          exit();
-          return;
-        }
-      }
-      const loadedConfig = loadConfig();
-      if (loadedConfig) {
-        setConfig(loadedConfig);
-        setProvider(createProvider(loadedConfig));
+    // Auth is already checked in runChat() before entering alternate screen
+    // So config should always exist at this point
+    const loadedConfig = loadConfig();
+    if (loadedConfig) {
+      setConfig(loadedConfig);
+      setProvider(createProvider(loadedConfig));
 
-        const activeProvider = loadedConfig.activeProvider;
-        const model =
-          loadedConfig.providers[activeProvider]?.model ?? 'unknown';
-        const session = createSession(model, activeProvider);
-        setCurrentSession(session);
-      }
-    };
-    init();
+      const activeProvider = loadedConfig.activeProvider;
+      const model = loadedConfig.providers[activeProvider]?.model ?? 'unknown';
+      const session = createSession(model, activeProvider);
+      setCurrentSession(session);
+    } else {
+      // This shouldn't happen, but handle gracefully
+      exit();
+    }
   }, [exit]);
 
   const messagesLength = state.messages.length;
@@ -407,6 +401,17 @@ function ChatApp() {
 }
 
 export async function runChat(): Promise<number> {
+  // Check auth BEFORE entering alternate screen buffer
+  // This allows the welcome banner and auth prompts to display properly
+  if (!configExists()) {
+    const success = await runAuthSetup();
+    if (!success) {
+      return 1;
+    }
+    console.log(); // Add spacing before entering chat
+  }
+
+  // Now enter alternate screen buffer for the chat UI
   process.stdout.write('\x1b[?1049h');
   process.stdout.write('\x1b[?25l');
   process.stdout.write('\x1b[2J\x1b[H');

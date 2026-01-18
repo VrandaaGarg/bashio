@@ -3,6 +3,7 @@ import { Command, Option } from 'clipanion';
 import pc from 'picocolors';
 import { getShortcut, removeShortcut } from '../../core/shortcuts.js';
 import { renderDangerBanner } from '../../utils/danger-ui.js';
+import { bashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 
 export class RemoveShortcutCommand extends Command {
@@ -40,6 +41,7 @@ export class RemoveShortcutCommand extends Command {
     const confirmed = await confirm({
       message: `Proceed with removing "${this.name}"?`,
       default: false,
+      theme: bashioTheme,
     });
 
     if (!confirmed) {

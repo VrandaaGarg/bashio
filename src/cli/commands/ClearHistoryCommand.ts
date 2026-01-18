@@ -7,6 +7,7 @@ import {
   getHistoryCount,
 } from '../../core/history.js';
 import { renderDangerBanner } from '../../utils/danger-ui.js';
+import { bashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 
 export class ClearHistoryCommand extends Command {
@@ -60,6 +61,7 @@ export class ClearHistoryCommand extends Command {
       const confirmed = await confirm({
         message: 'Proceed with clearing all history?',
         default: false,
+        theme: bashioTheme,
       });
 
       if (!confirmed) {
@@ -91,6 +93,7 @@ export class ClearHistoryCommand extends Command {
       const confirmed = await confirm({
         message: `Proceed with clearing entries older than ${days} days?`,
         default: false,
+        theme: bashioTheme,
       });
 
       if (!confirmed) {

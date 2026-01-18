@@ -3,6 +3,7 @@ import pc from 'picocolors';
 import { PROVIDER_DISPLAY_NAMES } from '../../core/auth.js';
 import { configExists, getConfigPath, loadConfig } from '../../core/config.js';
 import type { ProviderName } from '../../core/types.js';
+import { orange } from '../../utils/colors.js';
 import { logger } from '../../utils/logger.js';
 
 export class ConfigCommand extends Command {
@@ -44,7 +45,7 @@ export class ConfigCommand extends Command {
       for (const p of configuredProviders) {
         const settings = config.providers[p];
         const isActive = p === config.activeProvider;
-        const marker = isActive ? pc.green('●') : pc.dim('○');
+        const marker = isActive ? orange('●') : pc.dim('○');
         console.log(
           `  ${marker} ${PROVIDER_DISPLAY_NAMES[p]} - ${pc.dim(settings?.model || 'N/A')}`,
         );
@@ -56,10 +57,10 @@ export class ConfigCommand extends Command {
     console.log();
     console.log(pc.bold('  Settings'));
     console.log(
-      `  History:                ${settings?.historyEnabled !== false ? pc.green('enabled') : pc.gray('disabled')}`,
+      `  History:                ${settings?.historyEnabled !== false ? orange('enabled') : pc.gray('disabled')}`,
     );
     console.log(
-      `  Auto-confirm shortcuts: ${settings?.autoConfirmShortcuts ? pc.green('enabled') : pc.gray('disabled')}`,
+      `  Auto-confirm shortcuts: ${settings?.autoConfirmShortcuts ? orange('enabled') : pc.gray('disabled')}`,
     );
 
     console.log();

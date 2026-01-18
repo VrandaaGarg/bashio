@@ -10,6 +10,7 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../providers/index.js';
+import { orange } from '../utils/colors.js';
 import { bashioTheme } from '../utils/inquirerTheme.js';
 import { logger } from '../utils/logger.js';
 import { createSpinner } from '../utils/spinner.js';
@@ -68,7 +69,6 @@ async function openBrowser(url: string): Promise<boolean> {
 }
 
 function showWelcomeBanner(): void {
-  const orange = pc.yellow;
   const dim = pc.dim;
   const width = 58;
 
@@ -326,6 +326,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const apiKey = await password({
         message: 'Enter your Anthropic API key:',
         mask: '*',
+        theme: bashioTheme,
       });
       credentials = { type: 'api_key', apiKey };
 
@@ -344,6 +345,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const apiKey = await password({
         message: 'Enter your OpenAI API key:',
         mask: '*',
+        theme: bashioTheme,
       });
       credentials = { type: 'api_key', apiKey };
 
@@ -362,6 +364,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const host = await input({
         message: 'Ollama host:',
         default: 'http://localhost:11434',
+        theme: bashioTheme,
       });
       credentials = { type: 'local', host };
 
@@ -394,6 +397,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const apiKey = await password({
         message: 'Enter your OpenRouter API key:',
         mask: '*',
+        theme: bashioTheme,
       });
       credentials = { type: 'api_key', apiKey };
 
@@ -557,9 +561,7 @@ async function performBrowserOAuth(
   const browserOpened = await openBrowser(authUrl);
 
   if (browserOpened) {
-    console.log(
-      pc.green(`  Browser opened. Please log in to ${providerName}.`),
-    );
+    console.log(orange(`  Browser opened. Please log in to ${providerName}.`));
   } else {
     console.log(pc.yellow('  Could not open browser automatically.'));
     console.log(pc.dim('  Please open this URL manually:'));
@@ -616,6 +618,7 @@ async function performManualOAuth(
 
   const callbackUrl = await input({
     message: 'Paste the callback URL here:',
+    theme: bashioTheme,
   });
 
   try {
@@ -676,7 +679,7 @@ async function performCopilotDeviceFlow(): Promise<CopilotAuthResult | null> {
     console.log(
       `  1. Visit: ${pc.yellow(pc.underline(deviceCode.verification_uri))}`,
     );
-    console.log(`  2. Enter code: ${pc.bold(pc.green(deviceCode.user_code))}`);
+    console.log(`  2. Enter code: ${pc.bold(orange(deviceCode.user_code))}`);
     console.log();
 
     const browserOpened = await openBrowser(deviceCode.verification_uri);

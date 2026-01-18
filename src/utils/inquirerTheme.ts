@@ -1,16 +1,17 @@
-import pc from 'picocolors';
+import chalk from 'chalk';
+import { orange } from './colors.js';
 
 export const bashioTheme = {
   prefix: {
-    idle: pc.yellow('?'),
-    done: pc.yellow('✔'),
+    idle: orange('?'),
+    done: orange('✔'),
   },
   style: {
-    answer: (text: string) => pc.yellow(text),
-    highlight: (text: string) => pc.yellow(text),
-    description: (text: string) => pc.dim(text),
+    answer: (text: string) => orange(text),
+    highlight: (text: string) => orange(text),
+    description: (text: string) => chalk.dim(text),
   },
   icon: {
-    cursor: pc.yellow('❯'),
+    cursor: orange('❯'),
   },
 };

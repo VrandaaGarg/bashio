@@ -1,6 +1,7 @@
 import { Command } from 'clipanion';
 import pc from 'picocolors';
 import { getStats } from '../../core/history.js';
+import { orange } from '../../utils/colors.js';
 import { renderTable } from '../../utils/table.js';
 
 export class StatsCommand extends Command {
@@ -71,13 +72,13 @@ export class StatsCommand extends Command {
         title: 'Most Used Commands',
         columns: [
           { header: '#', key: 'rank', width: 3, align: 'right' },
-          { header: 'Command', key: 'command', width: 45, color: pc.yellow },
+          { header: 'Command', key: 'command', width: 45, color: orange },
           { header: 'Uses', key: 'uses', width: 8, align: 'right' },
           {
             header: 'Source',
             key: 'source',
             width: 10,
-            color: (v) => (v.trim() === 'ai' ? pc.blue(v) : pc.yellow(v)),
+            color: (v) => pc.yellow(v),
           },
         ],
         data: stats.topQueries.map((q, i) => ({

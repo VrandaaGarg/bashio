@@ -14,6 +14,7 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../../providers/index.js';
+import { orange } from '../../utils/colors.js';
 import { bashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
@@ -143,7 +144,7 @@ export class ModelCommand extends Command {
       const providerChoices = configuredProviders.map((p) => {
         const settings = config.providers[p];
         const isActive = p === config.activeProvider;
-        const marker = isActive ? pc.green('●') : pc.dim('○');
+        const marker = isActive ? orange('●') : pc.dim('○');
         const name = `${marker} ${PROVIDER_DISPLAY_NAMES[p]}`;
         const description = settings?.model || 'Not configured';
         return { value: p, name, description };
