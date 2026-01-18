@@ -17,11 +17,11 @@ const MenuItem = memo(function MenuItem({
 }: MenuItemProps) {
   const nameColWidth = 15;
   const nameText = `/${cmd.name}`.padEnd(nameColWidth);
-  const descWidth = width - nameColWidth - 4;
+  const descWidth = width - nameColWidth - 6; // Account for padding and borders
   const descText =
     cmd.description.length > descWidth
       ? `${cmd.description.slice(0, descWidth - 3)}...`
-      : cmd.description.padEnd(descWidth);
+      : cmd.description;
 
   if (isSelected) {
     return (
@@ -53,7 +53,7 @@ export const SlashCommandMenu = memo(function SlashCommandMenu({
   selectedIndex,
   width,
 }: SlashCommandMenuProps) {
-  const menuWidth = Math.min(width, 60);
+  const menuWidth = width; // Match input box width
 
   const { visibleCommands, startIndex } = useMemo(() => {
     let start = 0;
@@ -90,6 +90,7 @@ export const SlashCommandMenu = memo(function SlashCommandMenu({
     <Box
       borderStyle="round"
       borderColor="#eea154ff"
+      backgroundColor="#2a2a2a"
       flexDirection="column"
       width={menuWidth}
     >

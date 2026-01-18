@@ -354,11 +354,11 @@ function ChatApp() {
   }
 
   // Chat view layout (with messages)
-  const inputBoxHeight = 4;
-  const sessionHeaderHeight = 1;
+  const inputBoxHeight = 6; // Input box + footer + margins
+  const sessionHeaderHeight = 4; // Header with paddingY + margins
   const messageListHeight = Math.max(
     5,
-    height - inputBoxHeight - sessionHeaderHeight - 3,
+    height - inputBoxHeight - sessionHeaderHeight - 2,
   );
 
   return (
