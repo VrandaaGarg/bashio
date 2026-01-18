@@ -1,7 +1,11 @@
 import { loadConfig, saveConfig } from '../core/config.js';
 import { isClaudeTokenExpired, refreshClaudeToken } from '../core/oauth.js';
-import type { AIProvider, ProviderConfig } from './base.js';
-import { SYSTEM_PROMPT_EXPLAIN, SYSTEM_PROMPT_GENERATE } from './base.js';
+import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
+import {
+  SYSTEM_PROMPT_CHAT,
+  SYSTEM_PROMPT_EXPLAIN,
+  SYSTEM_PROMPT_GENERATE,
+} from './base.js';
 
 interface AnthropicMessage {
   role: 'user' | 'assistant';
@@ -182,6 +186,94 @@ export class ClaudeSubscriptionProvider implements AIProvider {
       return response.ok;
     } catch {
       return false;
+    }
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    onChunk: (chunk: string) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const token = await this.ensureValidToken();
+
+    const systemBlocks = [
+      { type: 'text', text: CLAUDE_CODE_PREFIX },
+      { type: 'text', text: SYSTEM_PROMPT_CHAT },
+    ];
+
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': CLAUDE_CODE_BETAS,
+      'anthropic-dangerous-direct-browser-access': 'true',
+      'user-agent': 'claude-cli/1.0.119 (external, cli)',
+      'x-app': 'cli',
+      accept: 'text/event-stream',
+    };
+
+    const response = await fetch(
+      'https://api.anthropic.com/v1/messages?beta=true',
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 4096,
+          system: systemBlocks,
+          messages: messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+          })),
+          stream: true,
+        }),
+        signal,
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Claude API error: ${response.status} - ${error}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.slice(6);
+          if (jsonStr === '[DONE]') continue;
+
+          try {
+            const data = JSON.parse(jsonStr) as {
+              type: string;
+              delta?: { type: string; text?: string };
+            };
+            if (
+              data.type === 'content_block_delta' &&
+              data.delta?.type === 'text_delta' &&
+              data.delta?.text
+            ) {
+              onChunk(data.delta.text);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      }
     }
   }
 }

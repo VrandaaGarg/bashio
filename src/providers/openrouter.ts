@@ -1,5 +1,9 @@
-import type { AIProvider, ProviderConfig } from './base.js';
-import { SYSTEM_PROMPT_EXPLAIN, SYSTEM_PROMPT_GENERATE } from './base.js';
+import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
+import {
+  SYSTEM_PROMPT_CHAT,
+  SYSTEM_PROMPT_EXPLAIN,
+  SYSTEM_PROMPT_GENERATE,
+} from './base.js';
 
 interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
@@ -92,6 +96,76 @@ export class OpenRouterProvider implements AIProvider {
       return response.ok;
     } catch {
       return false;
+    }
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    onChunk: (chunk: string) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const response = await fetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          'HTTP-Referer': 'https://github.com/bashio',
+          'X-Title': 'Bashio',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 4096,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT_CHAT },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+          stream: true,
+        }),
+        signal,
+      },
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.slice(6);
+          if (jsonStr === '[DONE]') continue;
+
+          try {
+            const data = JSON.parse(jsonStr) as {
+              choices?: Array<{ delta?: { content?: string } }>;
+            };
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) {
+              onChunk(content);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      }
     }
   }
 }

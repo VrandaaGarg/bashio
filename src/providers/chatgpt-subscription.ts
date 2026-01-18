@@ -4,8 +4,12 @@ import {
   extractAccountIdFromToken,
   refreshChatGPTToken,
 } from '../core/oauth.js';
-import type { AIProvider, ProviderConfig } from './base.js';
-import { SYSTEM_PROMPT_EXPLAIN, SYSTEM_PROMPT_GENERATE } from './base.js';
+import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
+import {
+  SYSTEM_PROMPT_CHAT,
+  SYSTEM_PROMPT_EXPLAIN,
+  SYSTEM_PROMPT_GENERATE,
+} from './base.js';
 
 // Codex backend API message format (input must be array of messages)
 interface CodexInputMessage {
@@ -255,6 +259,87 @@ export class ChatGPTSubscriptionProvider implements AIProvider {
       return !!token && token.length > 0;
     } catch {
       return false;
+    }
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    onChunk: (chunk: string) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const token = await this.ensureValidToken();
+
+    const requestBody: CodexRequest = {
+      model: this.model,
+      instructions: SYSTEM_PROMPT_CHAT,
+      input: messages.map((m) => ({
+        type: 'message' as const,
+        role: m.role,
+        content: [{ type: 'input_text' as const, text: m.content }],
+      })),
+      store: false,
+      stream: true,
+    };
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      'OpenAI-Beta': 'responses=experimental',
+      originator: 'bashio',
+    };
+
+    if (this.accountId) {
+      headers['ChatGPT-Account-Id'] = this.accountId;
+    }
+
+    const response = await fetch(CHATGPT_OAUTH_CONFIG.apiEndpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody),
+      signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`ChatGPT API error: ${response.status} - ${errorText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith('data:')) continue;
+          const data = line.substring(5).trim();
+          if (data === '[DONE]') return;
+
+          try {
+            const chunk = JSON.parse(data) as StreamChunk;
+            if (chunk.type === 'response.output_text.delta' && chunk.delta) {
+              onChunk(chunk.delta);
+            } else if (chunk.choices?.[0]?.delta?.content) {
+              onChunk(chunk.choices[0].delta.content);
+            }
+          } catch {
+            // Skip malformed JSON
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
     }
   }
 }

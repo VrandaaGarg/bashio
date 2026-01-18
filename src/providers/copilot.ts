@@ -5,8 +5,12 @@ import {
   isCopilotTokenExpired,
   parseCopilotToken,
 } from '../core/oauth.js';
-import type { AIProvider, ProviderConfig } from './base.js';
-import { SYSTEM_PROMPT_EXPLAIN, SYSTEM_PROMPT_GENERATE } from './base.js';
+import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
+import {
+  SYSTEM_PROMPT_CHAT,
+  SYSTEM_PROMPT_EXPLAIN,
+  SYSTEM_PROMPT_GENERATE,
+} from './base.js';
 
 // Streaming chunk format from Copilot API
 interface StreamChunk {
@@ -206,6 +210,85 @@ export class CopilotProvider implements AIProvider {
       return !!token && token.length > 0;
     } catch {
       return false;
+    }
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    onChunk: (chunk: string) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const token = await this.ensureValidToken();
+
+    const requestBody = {
+      model: this.model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT_CHAT },
+        ...messages.map((m) => ({ role: m.role, content: m.content })),
+      ],
+      temperature: 0.1,
+      top_p: 1,
+      n: 1,
+      stream: true,
+    };
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+      'User-Agent': 'GitHubCopilotChat/0.35.0',
+      'Editor-Version': 'vscode/1.107.0',
+      'Editor-Plugin-Version': 'copilot-chat/0.35.0',
+      'Copilot-Integration-Id': 'vscode-chat',
+    };
+
+    const response = await fetch(this.apiEndpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(requestBody),
+      signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Copilot API error: ${response.status} - ${errorText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || !line.startsWith('data:')) continue;
+          const data = line.substring(5).trim();
+          if (data === '[DONE]') return;
+
+          try {
+            const chunk = JSON.parse(data) as StreamChunk;
+            const content = chunk.choices?.[0]?.delta?.content;
+            if (content) {
+              onChunk(content);
+            }
+          } catch {
+            // Skip malformed chunks
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
     }
   }
 }

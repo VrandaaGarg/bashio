@@ -142,6 +142,7 @@ export class DefaultCommand extends Command {
     console.log(pc.gray('    b killport 3000') + pc.cyan('  (shortcut)'));
     console.log();
     console.log('  Commands:');
+    console.log(pc.gray('    b --chat              Start interactive chat'));
     console.log(pc.gray('    b --auth              Configure AI provider'));
     console.log(
       pc.gray('    b --config            View current configuration'),

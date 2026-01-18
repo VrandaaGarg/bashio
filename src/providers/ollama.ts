@@ -1,5 +1,9 @@
-import type { AIProvider, ProviderConfig } from './base.js';
-import { SYSTEM_PROMPT_EXPLAIN, SYSTEM_PROMPT_GENERATE } from './base.js';
+import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
+import {
+  SYSTEM_PROMPT_CHAT,
+  SYSTEM_PROMPT_EXPLAIN,
+  SYSTEM_PROMPT_GENERATE,
+} from './base.js';
 
 interface OllamaResponse {
   response?: string;
@@ -93,6 +97,65 @@ export class OllamaProvider implements AIProvider {
       return data.models.map((m) => m.name);
     } catch {
       return [];
+    }
+  }
+
+  async streamChat(
+    messages: ChatMessage[],
+    onChunk: (chunk: string) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const response = await fetch(`${this.host}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: this.model,
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT_CHAT },
+          ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ],
+        stream: true,
+      }),
+      signal,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Ollama error: ${response.status} - ${error}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const data = JSON.parse(line) as {
+            message?: { content?: string };
+            done?: boolean;
+          };
+          if (data.message?.content) {
+            onChunk(data.message.content);
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
     }
   }
 }

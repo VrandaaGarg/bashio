@@ -50,6 +50,7 @@ if (notifier.update) {
 
 import { AddShortcutCommand } from './commands/AddShortcutCommand.js';
 import { AuthCommand } from './commands/AuthCommand.js';
+import { ChatCommand } from './commands/ChatCommand.js';
 import { ClearHistoryCommand } from './commands/ClearHistoryCommand.js';
 import { ConfigCommand } from './commands/ConfigCommand.js';
 import { DefaultCommand } from './commands/DefaultCommand.js';
@@ -80,6 +81,7 @@ const cli = new Cli({
 
 cli.register(DefaultCommand);
 cli.register(AuthCommand);
+cli.register(ChatCommand);
 cli.register(ConfigCommand);
 cli.register(ModelCommand);
 cli.register(ShortcutsCommand);
