@@ -22,6 +22,7 @@ import {
   saveSession,
 } from './utils/sessions.js';
 import type { SlashCommandAction } from './utils/slashCommands.js';
+import { createSyncOutputStream } from './utils/syncOutput.js';
 
 export type { ChatMessage };
 
@@ -411,6 +412,8 @@ export async function runChat(): Promise<number> {
     console.log(); // Add spacing before entering chat
   }
 
+  const syncOutput = createSyncOutputStream(process.stdout);
+
   // Now enter alternate screen buffer for the chat UI
   process.stdout.write('\x1b[?1049h');
   process.stdout.write('\x1b[?25l');
@@ -422,10 +425,13 @@ export async function runChat(): Promise<number> {
     </MouseProvider>,
     {
       exitOnCtrlC: false,
+      stdout: syncOutput,
     },
   );
 
   await instance.waitUntilExit();
+
+  syncOutput._flushSyncOutput?.();
 
   process.stdout.write('\x1b[?25h');
   process.stdout.write('\x1b[?1049l');

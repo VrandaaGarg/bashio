@@ -1,6 +1,6 @@
 import { Box, Text, useInput } from 'ink';
 import type React from 'react';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import {
   filterCommands,
   type SlashCommandAction,
@@ -29,16 +29,6 @@ export const InputBox = memo(function InputBox({
   const [value, setValue] = useState('');
   const [cursorPos, setCursorPos] = useState(0);
   const [menuIndex, setMenuIndex] = useState(0);
-  const [cursorVisible, setCursorVisible] = useState(true);
-
-  // Blinking cursor effect
-  useEffect(() => {
-    if (disabled) return;
-    const interval = setInterval(() => {
-      setCursorVisible((v) => !v);
-    }, 530);
-    return () => clearInterval(interval);
-  }, [disabled]);
 
   const isSlashMode = value.startsWith('/') && !value.includes('\n');
   const filteredCommands = useMemo(
@@ -55,6 +45,11 @@ export const InputBox = memo(function InputBox({
   useInput(
     (input, key) => {
       if (disabled) return;
+
+      const normalizedInput = input
+        .replaceAll('\u001b[200~', '')
+        .replaceAll('\u001b[201~', '')
+        .replaceAll('\r', '');
 
       if (isSlashMode && filteredCommands.length > 0) {
         if (key.upArrow) {
@@ -108,6 +103,29 @@ export const InputBox = memo(function InputBox({
         return;
       }
 
+      const isControlSequence =
+        normalizedInput.length > 1 &&
+        (/^\[<?\d+;/.test(normalizedInput) ||
+          /^\[[0-9;]*[A-Za-z~]$/.test(normalizedInput));
+
+      if (isControlSequence) {
+        return;
+      }
+
+      if (
+        normalizedInput.length > 1 &&
+        !key.ctrl &&
+        !key.meta &&
+        !normalizedInput.includes('\u001b')
+      ) {
+        setValue(
+          (v) => v.slice(0, cursorPos) + normalizedInput + v.slice(cursorPos),
+        );
+        setCursorPos((p) => p + normalizedInput.length);
+        setMenuIndex(0);
+        return;
+      }
+
       if (key.backspace || key.delete) {
         if (cursorPos > 0) {
           setValue((v) => v.slice(0, cursorPos - 1) + v.slice(cursorPos));
@@ -156,10 +174,17 @@ export const InputBox = memo(function InputBox({
         return;
       }
 
-      if (input && !key.ctrl && !key.meta && input.length === 1) {
-        const charCode = input.charCodeAt(0);
+      if (
+        normalizedInput &&
+        !key.ctrl &&
+        !key.meta &&
+        normalizedInput.length === 1
+      ) {
+        const charCode = normalizedInput.charCodeAt(0);
         if (charCode >= 32) {
-          setValue((v) => v.slice(0, cursorPos) + input + v.slice(cursorPos));
+          setValue(
+            (v) => v.slice(0, cursorPos) + normalizedInput + v.slice(cursorPos),
+          );
           setCursorPos((p) => p + 1);
           setMenuIndex(0);
         }
@@ -176,8 +201,7 @@ export const InputBox = memo(function InputBox({
   const menuHeight =
     filteredCommands.length > 0 ? Math.min(filteredCommands.length, 5) + 2 : 3;
 
-  // Blinking cursor character
-  const cursor = cursorVisible ? '▋' : ' ';
+  const cursor = '▋';
 
   return (
     <Box flexDirection="column" width={width}>

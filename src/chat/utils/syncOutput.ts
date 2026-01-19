@@ -1,5 +1,13 @@
 import { Writable } from 'node:stream';
 
+interface WriteStreamProxy extends NodeJS.WriteStream {
+  _flushSyncOutput?: () => void;
+}
+
+export interface SyncOutputStream extends NodeJS.WriteStream {
+  _flushSyncOutput?: () => void;
+}
+
 // Synchronized output escape sequences (supported by iTerm2, kitty, and others)
 // This prevents screen tearing/flickering by batching terminal updates
 const SYNC_START = '\x1b[?2026h'; // Begin synchronized update
@@ -14,7 +22,9 @@ const SYNC_END = '\x1b[?2026l'; // End synchronized update
  * 2. Wraps the buffered output with sync start/end sequences
  * 3. Flushes to the real stdout
  */
-export function createSyncOutputStream(stdout: NodeJS.WriteStream): Writable {
+export function createSyncOutputStream(
+  stdout: NodeJS.WriteStream,
+): SyncOutputStream {
   let buffer = '';
   let flushTimeout: ReturnType<typeof setTimeout> | null = null;
   const FLUSH_DELAY = 4; // 4ms batching window (slightly less than one frame at 60fps)
@@ -71,5 +81,12 @@ export function createSyncOutputStream(stdout: NodeJS.WriteStream): Writable {
     stream.emit('resize');
   });
 
-  return stream;
+  const proxy = Object.create(
+    stdout,
+    Object.getOwnPropertyDescriptors(stream),
+  ) as WriteStreamProxy;
+
+  proxy._flushSyncOutput = flush;
+
+  return proxy;
 }

@@ -12,6 +12,7 @@ import {
   useImperativeHandle,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import type { ChatMessage } from '../../providers/base.js';
 
@@ -570,6 +571,7 @@ export const MessageList = memo(
   ) {
     const scrollRef = useRef<ScrollViewRef>(null);
     const mouseRef = useRef<DOMElement>(null);
+    const [followOutput, setFollowOutput] = useState(true);
 
     const boundedScrollBy = useCallback((delta: number) => {
       const sv = scrollRef.current;
@@ -578,6 +580,7 @@ export const MessageList = memo(
       const maxOffset = sv.getBottomOffset();
       const newOffset = Math.max(0, Math.min(maxOffset, currentOffset + delta));
       sv.scrollTo(newOffset);
+      setFollowOutput(newOffset >= maxOffset);
     }, []);
 
     const boundedScrollToBottom = useCallback(() => {
@@ -585,6 +588,7 @@ export const MessageList = memo(
       if (!sv) return;
       const maxOffset = sv.getBottomOffset();
       sv.scrollTo(Math.max(0, maxOffset));
+      setFollowOutput(true);
     }, []);
 
     useImperativeHandle(
@@ -601,24 +605,43 @@ export const MessageList = memo(
 
     // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally re-run on content changes
     useEffect(() => {
+      if (!followOutput) return;
       const timer = setTimeout(() => {
         boundedScrollToBottom();
       }, 10);
       return () => clearTimeout(timer);
-    }, [messagesCount, hasResponse, boundedScrollToBottom]);
+    }, [messagesCount, hasResponse, boundedScrollToBottom, followOutput]);
 
     // Scroll input - reads ref directly, no re-render when slash mode changes
     useInput((input, key) => {
       // Skip scrolling when slash menu is open (read from ref)
       if (slashModeRef.current) return;
 
+      if (input.startsWith('\u001b[<')) {
+        return;
+      }
+
+      const isUpSequence = input === '\u001b[A';
+      const isDownSequence = input === '\u001b[B';
+      const isPageUpSequence = input === '\u001b[5~';
+      const isPageDownSequence = input === '\u001b[6~';
+
+      if (key.ctrl && input === 'l') {
+        boundedScrollToBottom();
+        return;
+      }
+
       // Arrow keys for scrolling
-      if (key.upArrow) boundedScrollBy(-1);
-      if (key.downArrow) boundedScrollBy(1);
+      if (key.upArrow || isUpSequence) boundedScrollBy(-1);
+      if (key.downArrow || isDownSequence) boundedScrollBy(1);
 
       // Page up/down for faster scrolling
-      if (key.pageUp) boundedScrollBy(-Math.floor(height / 2));
-      if (key.pageDown) boundedScrollBy(Math.floor(height / 2));
+      if (key.pageUp || isPageUpSequence) {
+        boundedScrollBy(-Math.floor(height / 2));
+      }
+      if (key.pageDown || isPageDownSequence) {
+        boundedScrollBy(Math.floor(height / 2));
+      }
 
       // Vim-style: Ctrl+K/J for scrolling (3 lines at a time)
       if (input === 'k' && key.ctrl) boundedScrollBy(-3);
@@ -637,6 +660,17 @@ export const MessageList = memo(
         boundedScrollBy(3);
       }
     });
+
+    useEffect(() => {
+      if (followOutput) return;
+      const sv = scrollRef.current;
+      if (!sv) return;
+      const currentOffset = sv.getScrollOffset();
+      const maxOffset = sv.getBottomOffset();
+      if (maxOffset === 0 || currentOffset >= maxOffset) {
+        setFollowOutput(true);
+      }
+    }, [followOutput]);
 
     const streamingContent = useMemo(
       () => (currentResponse ? parseContent(currentResponse, width - 4) : null),
