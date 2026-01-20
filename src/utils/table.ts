@@ -1,4 +1,7 @@
 import pc from 'picocolors';
+import { accent } from './colors.js';
+
+export { accent };
 
 interface Column {
   header: string;

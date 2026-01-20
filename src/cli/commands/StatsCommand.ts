@@ -1,8 +1,7 @@
 import { Command } from 'clipanion';
 import pc from 'picocolors';
 import { getStats } from '../../core/history.js';
-import { orange } from '../../utils/colors.js';
-import { renderTable } from '../../utils/table.js';
+import { accent, renderTable } from '../../utils/table.js';
 
 export class StatsCommand extends Command {
   static paths = [['--stats']];
@@ -72,7 +71,7 @@ export class StatsCommand extends Command {
         title: 'Most Used Commands',
         columns: [
           { header: '#', key: 'rank', width: 3, align: 'right' },
-          { header: 'Command', key: 'command', width: 45, color: orange },
+          { header: 'Command', key: 'command', width: 45, color: accent },
           { header: 'Uses', key: 'uses', width: 8, align: 'right' },
           {
             header: 'Source',

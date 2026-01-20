@@ -4,7 +4,7 @@ import updateNotifier from 'update-notifier';
 import { loadConfig } from '../core/config.js';
 import { initDatabase } from '../core/database.js';
 import { cleanupHistory, shouldRunCleanup } from '../core/history.js';
-import { orange } from '../utils/colors.js';
+import { accent } from '../utils/colors.js';
 
 const pkg = {
   name: 'bashio',
@@ -21,6 +21,7 @@ const notifier = updateNotifier({
 if (notifier.update) {
   const { current, latest } = notifier.update;
   const width = 44;
+  const accentColor = accent;
 
   const ansiRegex = new RegExp(
     `${String.fromCharCode(27)}\\[[0-9;]*[a-zA-Z]`,
@@ -33,18 +34,18 @@ if (notifier.update) {
     return text + ' '.repeat(Math.max(0, padding));
   };
   const line = (content: string): string =>
-    orange('  │') + pad(content, width) + orange('│');
+    accentColor('  │') + pad(content, width) + accentColor('│');
 
   console.log();
-  console.log(orange(`  ┌${'─'.repeat(width)}┐`));
+  console.log(accentColor(`  ┌${'─'.repeat(width)}┐`));
   console.log(line(''));
   console.log(line(pc.bold('     Bashio Update Available!')));
   console.log(line(''));
-  console.log(line(`   ${pc.dim(current)} → ${orange(pc.bold(latest))}`));
+  console.log(line(`   ${pc.dim(current)} → ${accentColor(pc.bold(latest))}`));
   console.log(line(''));
-  console.log(line(`   Run: ${orange('npm i -g bashio@latest')}`));
+  console.log(line(`   Run: ${accentColor('npm i -g bashio@latest')}`));
   console.log(line(''));
-  console.log(orange(`  └${'─'.repeat(width)}┘`));
+  console.log(accentColor(`  └${'─'.repeat(width)}┘`));
   console.log();
 }
 
@@ -55,12 +56,14 @@ import { ClearHistoryCommand } from './commands/ClearHistoryCommand.js';
 import { ConfigCommand } from './commands/ConfigCommand.js';
 import { DefaultCommand } from './commands/DefaultCommand.js';
 import { EditShortcutsCommand } from './commands/EditShortcutsCommand.js';
+import { HelpCommand } from './commands/HelpCommand.js';
 import { HistoryCommand } from './commands/HistoryCommand.js';
 import { ModelCommand } from './commands/ModelCommand.js';
 import { RemoveShortcutCommand } from './commands/RemoveShortcutCommand.js';
 import { ShortcutsCommand } from './commands/ShortcutsCommand.js';
 import { StatsCommand } from './commands/StatsCommand.js';
 import { SuggestShortcutsCommand } from './commands/SuggestShortcutsCommand.js';
+import { ThemeCommand } from './commands/ThemeCommand.js';
 
 // Initialize database on startup
 initDatabase();
@@ -84,6 +87,7 @@ cli.register(AuthCommand);
 cli.register(ChatCommand);
 cli.register(ConfigCommand);
 cli.register(ModelCommand);
+cli.register(ThemeCommand);
 cli.register(ShortcutsCommand);
 cli.register(AddShortcutCommand);
 cli.register(RemoveShortcutCommand);
@@ -92,7 +96,7 @@ cli.register(HistoryCommand);
 cli.register(StatsCommand);
 cli.register(ClearHistoryCommand);
 cli.register(SuggestShortcutsCommand);
-cli.register(Builtins.HelpCommand);
+cli.register(HelpCommand);
 cli.register(Builtins.VersionCommand);
 
 export { cli };

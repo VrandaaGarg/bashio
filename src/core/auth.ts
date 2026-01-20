@@ -10,8 +10,8 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../providers/index.js';
-import { orange } from '../utils/colors.js';
-import { bashioTheme } from '../utils/inquirerTheme.js';
+import { accent } from '../utils/colors.js';
+import { getBashioTheme } from '../utils/inquirerTheme.js';
 import { logger } from '../utils/logger.js';
 import { createSpinner } from '../utils/spinner.js';
 import {
@@ -71,6 +71,7 @@ async function openBrowser(url: string): Promise<boolean> {
 function showWelcomeBanner(): void {
   const dim = pc.dim;
   const width = 58;
+  const accentColor = accent;
 
   const ansiRegex = new RegExp(
     `${String.fromCharCode(27)}\\[[0-9;]*[a-zA-Z]`,
@@ -86,10 +87,10 @@ function showWelcomeBanner(): void {
   };
 
   const line = (content: string): string =>
-    orange('  │') + pad(content, width) + orange('│');
+    accentColor('  │') + pad(content, width) + accentColor('│');
 
   console.log();
-  console.log(orange(`  ┌${'─'.repeat(width)}┐`));
+  console.log(accentColor(`  ┌${'─'.repeat(width)}┐`));
   console.log(line(''));
   console.log(
     line(
@@ -125,7 +126,7 @@ function showWelcomeBanner(): void {
   console.log(line(dim('   Natural language to shell commands.')));
   console.log(line(dim('   Stop Googling, start doing.')));
   console.log(line(''));
-  console.log(orange(`  └${'─'.repeat(width)}┘`));
+  console.log(accentColor(`  └${'─'.repeat(width)}┘`));
   console.log();
 }
 
@@ -176,7 +177,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
         description: 'Pay per use, multiple models',
       },
     ],
-    theme: bashioTheme,
+    theme: getBashioTheme(),
   });
 
   // Check if provider already configured
@@ -195,7 +196,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
         { value: 'reauth', name: 'Update credentials (re-authenticate)' },
         { value: 'cancel', name: 'Cancel' },
       ],
-      theme: bashioTheme,
+      theme: getBashioTheme(),
     });
 
     if (action === 'cancel') {
@@ -241,7 +242,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -283,7 +284,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -317,7 +318,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -326,7 +327,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const apiKey = await password({
         message: 'Enter your Anthropic API key:',
         mask: '*',
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       credentials = { type: 'api_key', apiKey };
 
@@ -336,7 +337,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -345,7 +346,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const apiKey = await password({
         message: 'Enter your OpenAI API key:',
         mask: '*',
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       credentials = { type: 'api_key', apiKey };
 
@@ -355,7 +356,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -364,7 +365,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const host = await input({
         message: 'Ollama host:',
         default: 'http://localhost:11434',
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       credentials = { type: 'local', host };
 
@@ -388,7 +389,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       model = await select({
         message: 'Select model:',
         choices: modelChoices,
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -397,7 +398,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       const apiKey = await password({
         message: 'Enter your OpenRouter API key:',
         mask: '*',
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       credentials = { type: 'api_key', apiKey };
 
@@ -407,7 +408,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
           value: m.value,
           name: m.label,
         })),
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
       break;
     }
@@ -491,7 +492,7 @@ async function performClaudeOAuth(): Promise<OAuthResult | null> {
         description: 'Copy URL to browser, then paste the callback URL',
       },
     ],
-    theme: bashioTheme,
+    theme: getBashioTheme(),
   });
 
   const pkce = generatePKCE();
@@ -527,7 +528,7 @@ async function performChatGPTOAuth(): Promise<OAuthResult | null> {
         description: 'Copy URL to browser, then paste the callback URL',
       },
     ],
-    theme: bashioTheme,
+    theme: getBashioTheme(),
   });
 
   const pkce = generatePKCE();
@@ -562,7 +563,7 @@ async function performBrowserOAuth(
   const browserOpened = await openBrowser(authUrl);
 
   if (browserOpened) {
-    console.log(orange(`  Browser opened. Please log in to ${providerName}.`));
+    console.log(accent(`  Browser opened. Please log in to ${providerName}.`));
   } else {
     console.log(pc.yellow('  Could not open browser automatically.'));
     console.log(pc.dim('  Please open this URL manually:'));
@@ -619,7 +620,7 @@ async function performManualOAuth(
 
   const callbackUrl = await input({
     message: 'Paste the callback URL here:',
-    theme: bashioTheme,
+    theme: getBashioTheme(),
   });
 
   try {
@@ -680,7 +681,7 @@ async function performCopilotDeviceFlow(): Promise<CopilotAuthResult | null> {
     console.log(
       `  1. Visit: ${pc.yellow(pc.underline(deviceCode.verification_uri))}`,
     );
-    console.log(`  2. Enter code: ${pc.bold(orange(deviceCode.user_code))}`);
+    console.log(`  2. Enter code: ${pc.bold(accent(deviceCode.user_code))}`);
     console.log();
 
     const browserOpened = await openBrowser(deviceCode.verification_uri);

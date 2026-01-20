@@ -1,8 +1,7 @@
 import { Command } from 'clipanion';
 import pc from 'picocolors';
 import { listShortcuts } from '../../core/shortcuts.js';
-import { orange } from '../../utils/colors.js';
-import { renderTable } from '../../utils/table.js';
+import { accent, renderTable } from '../../utils/table.js';
 
 export class ShortcutsCommand extends Command {
   static paths = [['shortcuts'], ['--shortcuts']];
@@ -34,7 +33,7 @@ export class ShortcutsCommand extends Command {
     renderTable({
       title: 'Your Shortcuts',
       columns: [
-        { header: 'Name', key: 'name', width: 15, color: orange },
+        { header: 'Name', key: 'name', width: 15, color: accent },
         {
           header: 'Command Template',
           key: 'template',

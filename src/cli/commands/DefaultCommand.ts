@@ -9,10 +9,10 @@ import { markExecuted, recordCommand } from '../../core/history.js';
 import { tryResolveShortcut } from '../../core/shortcuts.js';
 import { createProvider } from '../../providers/index.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
-import { orange } from '../../utils/colors.js';
+import { accent } from '../../utils/colors.js';
 import { detectDangerousShellCommand } from '../../utils/danger.js';
 import { renderDangerBanner } from '../../utils/danger-ui.js';
-import { bashioTheme } from '../../utils/inquirerTheme.js';
+import { getBashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
 
@@ -90,7 +90,7 @@ export class DefaultCommand extends Command {
       if (!success) {
         return 1;
       }
-      console.log(orange('Setup complete! Running your command...\n'));
+      console.log(accent('Setup complete! Running your command...\n'));
       currentConfig = loadConfig();
       if (!currentConfig) {
         logger.error('Failed to load configuration after setup.');
@@ -150,6 +150,7 @@ export class DefaultCommand extends Command {
       pc.gray('    b --config            View current configuration'),
     );
     console.log(pc.gray('    b --model             Change AI model'));
+    console.log(pc.gray('    b --theme             Change color theme'));
     console.log(pc.gray('    b --shortcuts         List all shortcuts'));
     console.log(pc.gray('    b --add-shortcut      Add a new shortcut'));
     console.log(pc.gray('    b --remove-shortcut   Remove a shortcut'));
@@ -334,7 +335,7 @@ export class DefaultCommand extends Command {
     const answer = await input({
       message: 'Execute? (y/n/e/c/edit)',
       default: 'y',
-      theme: bashioTheme,
+      theme: getBashioTheme(),
     });
 
     const normalized = answer.toLowerCase().trim();
@@ -387,7 +388,7 @@ export class DefaultCommand extends Command {
       });
 
       // Show the prompt
-      process.stdout.write(`${orange('?')} ${pc.bold('Edit command:')} `);
+      process.stdout.write(`${accent('?')} ${pc.bold('Edit command:')} `);
 
       // Pre-fill the input with current command
       rl.write(currentCommand);

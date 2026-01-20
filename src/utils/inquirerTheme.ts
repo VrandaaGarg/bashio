@@ -1,17 +1,22 @@
 import chalk from 'chalk';
-import { orange } from './colors.js';
+import { accent } from './colors.js';
 
-export const bashioTheme = {
-  prefix: {
-    idle: orange('?'),
-    done: orange('✔'),
-  },
-  style: {
-    answer: (text: string) => orange(text),
-    highlight: (text: string) => orange(text),
-    description: (text: string) => chalk.dim(text),
-  },
-  icon: {
-    cursor: orange('❯'),
-  },
-};
+export function getBashioTheme() {
+  const accentColor = accent;
+  return {
+    prefix: {
+      idle: accentColor('?'),
+      done: accentColor('✔'),
+    },
+    style: {
+      answer: (text: string) => accentColor(text),
+      highlight: (text: string) => accentColor(text),
+      description: (text: string) => chalk.dim(text),
+    },
+    icon: {
+      cursor: accentColor('❯'),
+    },
+  };
+}
+
+export const bashioTheme = getBashioTheme();
