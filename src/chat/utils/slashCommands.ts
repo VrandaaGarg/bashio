@@ -1,6 +1,7 @@
 export type SlashCommandAction =
   | 'openModelSwitcher'
   | 'openSessionPicker'
+  | 'openThemePicker'
   | 'newSession'
   | 'clearChat'
   | 'exitChat';
@@ -21,6 +22,11 @@ export const SLASH_COMMANDS: SlashCommand[] = [
     name: 'sessions',
     description: 'Browse chat sessions',
     action: 'openSessionPicker',
+  },
+  {
+    name: 'theme',
+    description: 'Change color theme',
+    action: 'openThemePicker',
   },
   { name: 'new', description: 'Start new chat session', action: 'newSession' },
   { name: 'clear', description: 'Clear current chat', action: 'clearChat' },

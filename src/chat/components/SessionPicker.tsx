@@ -6,6 +6,7 @@ import {
   listSessions,
   type SessionMeta,
 } from '../utils/sessions.js';
+import { useTheme } from '../utils/ThemeContext.js';
 
 interface SessionPickerProps {
   onSelect: (sessionId: string | null) => void;
@@ -35,6 +36,7 @@ interface SessionRowProps {
   rowWidth: number;
   titleWidth: number;
   index: number;
+  accent: string;
   onHover: (index: number) => void;
   onClick: (index: number) => void;
 }
@@ -46,6 +48,7 @@ const SessionRow = memo(function SessionRow({
   rowWidth,
   titleWidth,
   index,
+  accent,
   onHover,
   onClick,
 }: SessionRowProps) {
@@ -63,7 +66,7 @@ const SessionRow = memo(function SessionRow({
     return (
       <Box
         ref={rowRef}
-        backgroundColor={isSelected ? '#eea154ff' : undefined}
+        backgroundColor={isSelected ? accent : undefined}
         width={rowWidth}
         paddingX={1}
       >
@@ -84,7 +87,7 @@ const SessionRow = memo(function SessionRow({
   return (
     <Box
       ref={rowRef}
-      backgroundColor={isSelected ? '#eea154ff' : undefined}
+      backgroundColor={isSelected ? accent : undefined}
       width={rowWidth}
       paddingX={1}
     >
@@ -179,7 +182,7 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
 
   const visibleItems = allItems.slice(startIndex, startIndex + visibleCount);
 
-  const bgColor = '#1e1e1e';
+  const theme = useTheme();
   const rowWidth = Math.min(76, width - 6);
   const titleWidth = Math.min(40, width - 30);
 
@@ -190,17 +193,17 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
       height={height}
       justifyContent="center"
       alignItems="center"
-      backgroundColor={bgColor}
+      backgroundColor={theme.background}
     >
       <Box
         flexDirection="column"
         width={Math.min(80, width - 4)}
         borderStyle="double"
-        borderColor="#eea154ff"
+        borderColor={theme.accent}
       >
         {/* Header */}
         <Box paddingX={2} paddingY={1} justifyContent="space-between">
-          <Text bold color="#eea154ff">
+          <Text bold color={theme.accent}>
             Chat Sessions
           </Text>
           <Text dimColor>Esc: close | Enter: select | Ctrl+D: delete</Text>
@@ -226,6 +229,7 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
                   rowWidth={rowWidth}
                   titleWidth={titleWidth}
                   index={actualIndex}
+                  accent={theme.accent}
                   onHover={handleHover}
                   onClick={handleClick}
                 />
@@ -240,6 +244,7 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
                 rowWidth={rowWidth}
                 titleWidth={titleWidth}
                 index={actualIndex}
+                accent={theme.accent}
                 onHover={handleHover}
                 onClick={handleClick}
               />

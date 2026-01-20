@@ -2,6 +2,7 @@ import { useOnClick, useOnMouseMove } from '@ink-tools/ink-mouse';
 import { Box, type DOMElement, Text } from 'ink';
 import { memo, useMemo, useRef } from 'react';
 import type { SlashCommand } from '../utils/slashCommands.js';
+import { useTheme } from '../utils/ThemeContext.js';
 
 const VISIBLE_ROWS = 5;
 
@@ -10,6 +11,8 @@ interface MenuItemProps {
   isSelected: boolean;
   width: number;
   index: number;
+  accent: string;
+  textPrimary: string;
   onHover: (index: number) => void;
   onClick: (index: number) => void;
 }
@@ -19,6 +22,8 @@ const MenuItem = memo(function MenuItem({
   isSelected,
   width,
   index,
+  accent,
+  textPrimary,
   onHover,
   onClick,
 }: MenuItemProps) {
@@ -41,7 +46,7 @@ const MenuItem = memo(function MenuItem({
 
   if (isSelected) {
     return (
-      <Box ref={rowRef} backgroundColor="#eea154ff" paddingX={1}>
+      <Box ref={rowRef} backgroundColor={accent} paddingX={1}>
         <Text color="white" bold>
           {nameText}
           {descText}
@@ -52,7 +57,7 @@ const MenuItem = memo(function MenuItem({
 
   return (
     <Box ref={rowRef} paddingX={1}>
-      <Text color="white">{nameText}</Text>
+      <Text color={textPrimary}>{nameText}</Text>
       <Text dimColor>{descText}</Text>
     </Box>
   );
@@ -73,6 +78,7 @@ export const SlashCommandMenu = memo(function SlashCommandMenu({
   onHover,
   onSelect,
 }: SlashCommandMenuProps) {
+  const theme = useTheme();
   const menuWidth = width;
 
   const { visibleCommands, startIndex } = useMemo(() => {
@@ -117,8 +123,8 @@ export const SlashCommandMenu = memo(function SlashCommandMenu({
   return (
     <Box
       borderStyle="round"
-      borderColor="#eea154ff"
-      backgroundColor="#2a2a2a"
+      borderColor={theme.accent}
+      backgroundColor={theme.secondaryBg}
       flexDirection="column"
       width={menuWidth}
     >
@@ -129,6 +135,8 @@ export const SlashCommandMenu = memo(function SlashCommandMenu({
           isSelected={startIndex + i === selectedIndex}
           width={menuWidth}
           index={startIndex + i}
+          accent={theme.accent}
+          textPrimary={theme.textPrimary}
           onHover={handleHover}
           onClick={handleClick}
         />

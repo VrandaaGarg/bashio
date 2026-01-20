@@ -429,6 +429,7 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
       historyRetentionDays: 30,
       historyMaxEntries: 2000,
       autoConfirmShortcuts: false,
+      theme: 'bashio',
     },
   };
 

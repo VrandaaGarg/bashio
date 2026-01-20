@@ -66,6 +66,7 @@ export const Settings = z.object({
   historyRetentionDays: z.number().default(30),
   historyMaxEntries: z.number().default(2000),
   autoConfirmShortcuts: z.boolean().default(false),
+  theme: z.string().default('bashio'),
 });
 export type Settings = z.infer<typeof Settings>;
 

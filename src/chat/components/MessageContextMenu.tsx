@@ -1,6 +1,7 @@
 import { useOnClick, useOnMouseMove } from '@ink-tools/ink-mouse';
 import { Box, type DOMElement, Text, useInput } from 'ink';
 import { memo, useRef, useState } from 'react';
+import { useTheme } from '../utils/ThemeContext.js';
 
 interface MenuItem {
   label: string;
@@ -24,6 +25,7 @@ interface MenuItemRowProps {
   index: number;
   isSelected: boolean;
   rowWidth: number;
+  accent: string;
   onHover: (index: number) => void;
   onClick: (action: string) => void;
 }
@@ -33,6 +35,7 @@ const MenuItemRow = memo(function MenuItemRow({
   index,
   isSelected,
   rowWidth,
+  accent,
   onHover,
   onClick,
 }: MenuItemRowProps) {
@@ -49,7 +52,7 @@ const MenuItemRow = memo(function MenuItemRow({
   return (
     <Box
       ref={rowRef}
-      backgroundColor={isSelected ? '#eea154ff' : undefined}
+      backgroundColor={isSelected ? accent : undefined}
       width={rowWidth}
       justifyContent="space-between"
       paddingX={1}
@@ -112,7 +115,7 @@ export const MessageContextMenu = memo(function MessageContextMenu({
     }
   };
 
-  const bgColor = '#1e1e1e';
+  const theme = useTheme();
   const menuWidth = Math.min(width, 50);
 
   return (
@@ -120,12 +123,12 @@ export const MessageContextMenu = memo(function MessageContextMenu({
       flexDirection="column"
       width={menuWidth}
       borderStyle="round"
-      borderColor="#eea154ff"
-      backgroundColor={bgColor}
+      borderColor={theme.accent}
+      backgroundColor={theme.background}
     >
       {/* Header */}
       <Box paddingX={1} justifyContent="space-between">
-        <Text bold color="white">
+        <Text bold color={theme.textPrimary}>
           Message Actions
         </Text>
         <Text dimColor>esc</Text>
@@ -145,6 +148,7 @@ export const MessageContextMenu = memo(function MessageContextMenu({
             index={index}
             isSelected={index === selectedIndex}
             rowWidth={menuWidth - 2}
+            accent={theme.accent}
             onHover={handleHover}
             onClick={handleClick}
           />

@@ -16,6 +16,7 @@ import {
 } from 'react';
 import type { ChatMessage } from '../../providers/base.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { useTheme } from '../utils/ThemeContext.js';
 import { MessageContextMenu } from './MessageContextMenu.js';
 
 interface MessageListProps {
@@ -528,11 +529,13 @@ const Message = memo(function Message({
   message,
   width,
   messageIndex,
+  accent,
   onMessageClick,
 }: {
   message: ChatMessage;
   width: number;
   messageIndex: number;
+  accent: string;
   onMessageClick?: (messageIndex: number, content: string) => void;
 }) {
   const isUser = message.role === 'user';
@@ -555,7 +558,7 @@ const Message = memo(function Message({
   return (
     <Box ref={messageRef} flexDirection="column" marginY={1} width={width}>
       <Box>
-        <Text bold color={isUser ? '#eea154ff' : 'yellow'}>
+        <Text bold color={isUser ? accent : 'yellow'}>
           {isUser ? 'You' : 'Bashio'}:
         </Text>
       </Box>
@@ -586,6 +589,7 @@ export const MessageList = memo(
     { messages, currentResponse, isLoading, height, width, slashModeRef },
     ref,
   ) {
+    const theme = useTheme();
     const scrollRef = useRef<ScrollViewRef>(null);
     const mouseRef = useRef<DOMElement>(null);
     const [followOutput, setFollowOutput] = useState(true);
@@ -735,6 +739,7 @@ export const MessageList = memo(
                 message={msg}
                 width={width}
                 messageIndex={i}
+                accent={theme.accent}
                 onMessageClick={
                   contextMenu === null ? handleMessageClick : undefined
                 }
@@ -762,10 +767,10 @@ export const MessageList = memo(
 
             {isLoading && !currentResponse && (
               <Box key="loading" marginY={1}>
-                <Text color="#eea154ff">
+                <Text color={theme.accent}>
                   <Spinner type="dots" />
                 </Text>
-                <Text color="#eea154ff"> Thinking...</Text>
+                <Text color={theme.accent}> Thinking...</Text>
               </Box>
             )}
           </ScrollView>

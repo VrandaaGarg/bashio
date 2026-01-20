@@ -11,6 +11,7 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../../providers/index.js';
+import { useTheme } from '../utils/ThemeContext.js';
 
 interface ModelSwitcherProps {
   config: ConfigV2;
@@ -28,6 +29,7 @@ interface ModelRowProps {
   option: ModelOption;
   isSelected: boolean;
   rowWidth: number;
+  accent: string;
   onHover: () => void;
   onClick: () => void;
 }
@@ -36,6 +38,7 @@ const ModelRow = memo(function ModelRow({
   option,
   isSelected,
   rowWidth,
+  accent,
   onHover,
   onClick,
 }: ModelRowProps) {
@@ -47,7 +50,7 @@ const ModelRow = memo(function ModelRow({
   return (
     <Box
       ref={rowRef}
-      backgroundColor={isSelected ? '#eea154ff' : undefined}
+      backgroundColor={isSelected ? accent : undefined}
       width={rowWidth}
       paddingX={1}
     >
@@ -150,7 +153,7 @@ export function ModelSwitcher({
   }
   const visibleOptions = options.slice(startIndex, startIndex + visibleCount);
 
-  const bgColor = '#1e1e1e';
+  const theme = useTheme();
 
   return (
     <Box
@@ -159,17 +162,17 @@ export function ModelSwitcher({
       height={height}
       justifyContent="center"
       alignItems="center"
-      backgroundColor={bgColor}
+      backgroundColor={theme.background}
     >
       <Box
         flexDirection="column"
         width={Math.min(70, width - 4)}
         borderStyle="double"
-        borderColor="#eea154ff"
+        borderColor={theme.accent}
       >
         {/* Header */}
         <Box paddingX={2} paddingY={1} justifyContent="space-between">
-          <Text bold color="#eea154ff">
+          <Text bold color={theme.accent}>
             Select Model
           </Text>
           <Text dimColor>Esc to close | j/k or arrows to navigate</Text>
@@ -191,6 +194,7 @@ export function ModelSwitcher({
                 option={option}
                 isSelected={isSelected}
                 rowWidth={Math.min(66, width - 8)}
+                accent={theme.accent}
                 onHover={() => handleHover(actualIndex)}
                 onClick={() => handleClick(actualIndex)}
               />

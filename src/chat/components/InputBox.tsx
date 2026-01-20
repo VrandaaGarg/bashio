@@ -5,6 +5,7 @@ import {
   filterCommands,
   type SlashCommandAction,
 } from '../utils/slashCommands.js';
+import { useTheme } from '../utils/ThemeContext.js';
 import { SlashCommandMenu } from './SlashCommandMenu.js';
 
 interface InputBoxProps {
@@ -202,7 +203,7 @@ export const InputBox = memo(function InputBox({
     filteredCommands.length > 0 ? Math.min(filteredCommands.length, 5) + 2 : 3;
 
   const cursor = '▋';
-  const bgColor = '#1e1e1e';
+  const theme = useTheme();
 
   const handleMenuHover = (index: number) => {
     setMenuIndex(index);
@@ -219,7 +220,11 @@ export const InputBox = memo(function InputBox({
   };
 
   return (
-    <Box flexDirection="column" width={width} backgroundColor={bgColor}>
+    <Box
+      flexDirection="column"
+      width={width}
+      backgroundColor={theme.background}
+    >
       {isSlashMode && (
         <Box position="absolute" marginTop={-menuHeight} marginLeft={0}>
           <SlashCommandMenu
@@ -232,13 +237,17 @@ export const InputBox = memo(function InputBox({
         </Box>
       )}
       {/* Wrapper with background to fill the gap above the border */}
-      <Box flexDirection="column" paddingTop={1} backgroundColor={bgColor}>
+      <Box
+        flexDirection="column"
+        paddingTop={1}
+        backgroundColor={theme.background}
+      >
         {/* Input area with border on all sides */}
         <Box
           flexDirection="column"
           borderStyle="round"
-          borderColor="#eea154ff"
-          backgroundColor="#2a2a2a"
+          borderColor={theme.accent}
+          backgroundColor={theme.secondaryBg}
           paddingX={2}
           paddingY={1}
         >
@@ -246,15 +255,21 @@ export const InputBox = memo(function InputBox({
           <Box>
             {isEmpty && !disabled ? (
               <Text>
-                <Text color="white">{cursor}</Text>
+                <Text color={theme.textPrimary}>{cursor}</Text>
                 <Text dimColor>{placeholder}</Text>
               </Text>
             ) : (
               <Text
-                color={disabled ? 'gray' : isSlashMode ? '#eea154ff' : 'white'}
+                color={
+                  disabled
+                    ? 'gray'
+                    : isSlashMode
+                      ? theme.accent
+                      : theme.textPrimary
+                }
               >
                 {beforeCursor}
-                {!disabled && <Text color="white">{cursor}</Text>}
+                {!disabled && <Text color={theme.textPrimary}>{cursor}</Text>}
                 {atCursor !== ' ' && atCursor}
                 {afterCursor.replace(/\n/g, '↵')}
               </Text>
@@ -266,18 +281,18 @@ export const InputBox = memo(function InputBox({
       <Box
         justifyContent="space-between"
         paddingX={1}
-        backgroundColor={bgColor}
+        backgroundColor={theme.background}
       >
         <Box>
-          <Text color="#eea154ff">◆ </Text>
-          <Text color="white">{modelName}</Text>
+          <Text color={theme.accent}>◆ </Text>
+          <Text color={theme.textPrimary}>{modelName}</Text>
         </Box>
         <Box>
-          <Text color="white" bold>
+          <Text color={theme.textPrimary} bold>
             /
           </Text>
           <Text dimColor> commands </Text>
-          <Text color="white" bold>
+          <Text color={theme.textPrimary} bold>
             ctrl+c
           </Text>
           <Text dimColor> exit</Text>
