@@ -1,3 +1,4 @@
+import { createNetworkError, createOllamaError } from '../core/errors.js';
 import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
 import {
   SYSTEM_PROMPT_CHAT,
@@ -33,30 +34,35 @@ export class OllamaProvider implements AIProvider {
     systemPrompt: string,
     userMessage: string,
   ): Promise<string> {
-    const response = await fetch(`${this.host}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-        stream: false,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.host}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userMessage },
+          ],
+          stream: false,
+        }),
+      });
+    } catch (error) {
+      throw createNetworkError(error, 'Ollama', this.host);
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Ollama error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      throw createOllamaError(errorText, this.model, response.status);
     }
 
     const data = (await response.json()) as OllamaResponse;
 
     if (data.error) {
-      throw new Error(`Ollama error: ${data.error}`);
+      throw createOllamaError(data.error, this.model);
     }
 
     const content = data.message?.content || data.response;
@@ -105,25 +111,30 @@ export class OllamaProvider implements AIProvider {
     onChunk: (chunk: string) => void,
     signal?: AbortSignal,
   ): Promise<void> {
-    const response = await fetch(`${this.host}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: this.model,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT_CHAT },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
-        ],
-        stream: true,
-      }),
-      signal,
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${this.host}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT_CHAT },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+          stream: true,
+        }),
+        signal,
+      });
+    } catch (error) {
+      throw createNetworkError(error, 'Ollama', this.host);
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Ollama error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      throw createOllamaError(errorText, this.model, response.status);
     }
 
     const reader = response.body?.getReader();

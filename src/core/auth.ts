@@ -1,4 +1,4 @@
-import { input, password, select } from '@inquirer/prompts';
+import { confirm, input, password, select } from '@inquirer/prompts';
 import pc from 'picocolors';
 import {
   CHATGPT_SUBSCRIPTION_MODELS,
@@ -20,6 +20,7 @@ import {
   saveConfig,
   setProviderConfig,
 } from './config.js';
+import { validateApiKeyFormat } from './errors.js';
 import {
   buildChatGPTAuthUrl,
   buildClaudeAuthUrl,
@@ -324,11 +325,33 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
     }
 
     case 'claude': {
-      const apiKey = await password({
+      let apiKey = await password({
         message: 'Enter your Anthropic API key:',
         mask: '*',
         theme: getBashioTheme(),
       });
+
+      let keyWarning = validateApiKeyFormat(apiKey, 'claude');
+      while (keyWarning) {
+        console.log(pc.yellow(`\n  ${keyWarning}`));
+        const continueAnyway = await confirm({
+          message: 'Continue anyway?',
+          default: false,
+          theme: getBashioTheme(),
+        });
+
+        if (continueAnyway) {
+          break;
+        }
+
+        apiKey = await password({
+          message: 'Enter your Anthropic API key:',
+          mask: '*',
+          theme: getBashioTheme(),
+        });
+        keyWarning = validateApiKeyFormat(apiKey, 'claude');
+      }
+
       credentials = { type: 'api_key', apiKey };
 
       model = await select({
@@ -343,11 +366,33 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
     }
 
     case 'openai': {
-      const apiKey = await password({
+      let apiKey = await password({
         message: 'Enter your OpenAI API key:',
         mask: '*',
         theme: getBashioTheme(),
       });
+
+      let keyWarning = validateApiKeyFormat(apiKey, 'openai');
+      while (keyWarning) {
+        console.log(pc.yellow(`\n  ${keyWarning}`));
+        const continueAnyway = await confirm({
+          message: 'Continue anyway?',
+          default: false,
+          theme: getBashioTheme(),
+        });
+
+        if (continueAnyway) {
+          break;
+        }
+
+        apiKey = await password({
+          message: 'Enter your OpenAI API key:',
+          mask: '*',
+          theme: getBashioTheme(),
+        });
+        keyWarning = validateApiKeyFormat(apiKey, 'openai');
+      }
+
       credentials = { type: 'api_key', apiKey };
 
       model = await select({
@@ -395,11 +440,33 @@ export async function runAuthSetup(showBanner = true): Promise<boolean> {
     }
 
     case 'openrouter': {
-      const apiKey = await password({
+      let apiKey = await password({
         message: 'Enter your OpenRouter API key:',
         mask: '*',
         theme: getBashioTheme(),
       });
+
+      let keyWarning = validateApiKeyFormat(apiKey, 'openrouter');
+      while (keyWarning) {
+        console.log(pc.yellow(`\n  ${keyWarning}`));
+        const continueAnyway = await confirm({
+          message: 'Continue anyway?',
+          default: false,
+          theme: getBashioTheme(),
+        });
+
+        if (continueAnyway) {
+          break;
+        }
+
+        apiKey = await password({
+          message: 'Enter your OpenRouter API key:',
+          mask: '*',
+          theme: getBashioTheme(),
+        });
+        keyWarning = validateApiKeyFormat(apiKey, 'openrouter');
+      }
+
       credentials = { type: 'api_key', apiKey };
 
       model = await select({
