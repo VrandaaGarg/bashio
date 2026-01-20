@@ -1,5 +1,6 @@
 import { Command } from 'clipanion';
 import pc from 'picocolors';
+import { PACKAGE_VERSION } from '../../core/constants.js';
 import { accent, renderTable } from '../../utils/table.js';
 
 export class HelpCommand extends Command {
@@ -10,10 +11,8 @@ export class HelpCommand extends Command {
   });
 
   async execute(): Promise<number> {
-    const version = '1.1.1';
-
     console.log();
-    console.log(pc.bold(`  Bashio v${version}`));
+    console.log(pc.bold(`  Bashio v${PACKAGE_VERSION}`));
     console.log(pc.dim('  Natural language to shell commands\n'));
 
     renderTable({

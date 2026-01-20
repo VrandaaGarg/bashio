@@ -1,14 +1,15 @@
-import { Builtins, Cli } from 'clipanion';
+import { Cli } from 'clipanion';
 import pc from 'picocolors';
 import updateNotifier from 'update-notifier';
 import { loadConfig } from '../core/config.js';
+import { PACKAGE_NAME, PACKAGE_VERSION } from '../core/constants.js';
 import { initDatabase } from '../core/database.js';
 import { cleanupHistory, shouldRunCleanup } from '../core/history.js';
 import { accent } from '../utils/colors.js';
 
 const pkg = {
-  name: 'bashio',
-  version: '1.1.1',
+  name: PACKAGE_NAME,
+  version: PACKAGE_VERSION,
 };
 
 // Check for updates (runs in background, cached for 1 day)
@@ -64,6 +65,7 @@ import { ShortcutsCommand } from './commands/ShortcutsCommand.js';
 import { StatsCommand } from './commands/StatsCommand.js';
 import { SuggestShortcutsCommand } from './commands/SuggestShortcutsCommand.js';
 import { ThemeCommand } from './commands/ThemeCommand.js';
+import { VersionCommand } from './commands/VersionCommand.js';
 
 // Initialize database on startup
 initDatabase();
@@ -97,6 +99,6 @@ cli.register(StatsCommand);
 cli.register(ClearHistoryCommand);
 cli.register(SuggestShortcutsCommand);
 cli.register(HelpCommand);
-cli.register(Builtins.VersionCommand);
+cli.register(VersionCommand);
 
 export { cli };
