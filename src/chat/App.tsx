@@ -116,8 +116,8 @@ function ChatApp() {
       if (key.ctrl && input === 'c') {
         exit();
       }
-      if (!slashModeRef.current && noPickerOpen) {
-        if ((key.ctrl && input === 'm') || (key.ctrl && input === 'p')) {
+      if (!slashModeRef.current && noPickerOpen && !state.isLoading) {
+        if (key.ctrl && input === 'p') {
           setState((s) => ({ ...s, showModelSwitcher: true }));
         }
         if (key.ctrl && input === 'o') {
@@ -125,6 +125,33 @@ function ChatApp() {
         }
         if (key.ctrl && input === 't') {
           setState((s) => ({ ...s, showThemePicker: true }));
+        }
+        if (key.ctrl && input === 'n') {
+          // New session - handled via handleSessionSelect(null) equivalent
+          if (config) {
+            const activeProvider = config.activeProvider;
+            const model = config.providers[activeProvider]?.model ?? 'unknown';
+            const session = createSession(model, activeProvider);
+            setCurrentSession(session);
+            setState((s) => ({
+              ...s,
+              messages: [],
+              error: null,
+            }));
+          }
+        }
+        if (key.ctrl && input === 'l') {
+          // Clear chat
+          setState((s) => ({ ...s, messages: [], error: null }));
+          if (currentSession) {
+            const clearedSession: Session = {
+              ...currentSession,
+              messages: [],
+              messageCount: 0,
+            };
+            saveSession(clearedSession);
+            setCurrentSession(clearedSession);
+          }
         }
       }
       if (key.escape) {
@@ -145,6 +172,9 @@ function ChatApp() {
       state.showModelSwitcher,
       state.showSessionPicker,
       state.showThemePicker,
+      state.isLoading,
+      config,
+      currentSession,
     ],
   );
 

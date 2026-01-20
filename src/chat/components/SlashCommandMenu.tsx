@@ -29,12 +29,13 @@ const MenuItem = memo(function MenuItem({
 }: MenuItemProps) {
   const rowRef = useRef<DOMElement>(null);
   const nameColWidth = 15;
+  const shortcutWidth = cmd.shortcut ? cmd.shortcut.length + 2 : 0;
   const nameText = `/${cmd.name}`.padEnd(nameColWidth);
-  const descWidth = width - nameColWidth - 6;
+  const descWidth = width - nameColWidth - shortcutWidth - 6;
   const descText =
     cmd.description.length > descWidth
       ? `${cmd.description.slice(0, descWidth - 3)}...`
-      : cmd.description;
+      : cmd.description.padEnd(descWidth);
 
   useOnMouseMove(rowRef, () => {
     onHover(index);
@@ -49,8 +50,15 @@ const MenuItem = memo(function MenuItem({
       <Box ref={rowRef} backgroundColor={accent} paddingX={1}>
         <Text color="white" bold>
           {nameText}
+        </Text>
+        <Text color="white" bold>
           {descText}
         </Text>
+        {cmd.shortcut && (
+          <Text color="white" bold>
+            {cmd.shortcut}
+          </Text>
+        )}
       </Box>
     );
   }
@@ -59,6 +67,7 @@ const MenuItem = memo(function MenuItem({
     <Box ref={rowRef} paddingX={1}>
       <Text color={textPrimary}>{nameText}</Text>
       <Text dimColor>{descText}</Text>
+      {cmd.shortcut && <Text dimColor>{cmd.shortcut}</Text>}
     </Box>
   );
 });
