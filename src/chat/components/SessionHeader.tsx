@@ -21,6 +21,7 @@ export const SessionHeader = memo(function SessionHeader({
       backgroundColor="#2a2a2a"
       paddingX={1}
       paddingY={1}
+      gap={1}
       width={width}
     >
       <Text color="#eea154ff">#</Text>

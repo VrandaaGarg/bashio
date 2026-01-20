@@ -293,6 +293,9 @@ function ChatApp() {
     [handleSessionSelect, currentSession, exit],
   );
 
+  // Custom dark grey background color for the chat environment
+  const bgColor = '#1e1e1e';
+
   if (!config || !provider) {
     return (
       <Box
@@ -332,7 +335,12 @@ function ChatApp() {
   // Welcome screen layout (centered)
   if (isEmptyChat) {
     return (
-      <Box flexDirection="column" width={width} height={height}>
+      <Box
+        flexDirection="column"
+        width={width}
+        height={height}
+        backgroundColor={bgColor}
+      >
         <WelcomeScreen width={width} height={height}>
           <InputBox
             onSubmit={handleSubmit}
@@ -357,7 +365,12 @@ function ChatApp() {
   );
 
   return (
-    <Box flexDirection="column" width={width} height={height}>
+    <Box
+      flexDirection="column"
+      width={width}
+      height={height}
+      backgroundColor={bgColor}
+    >
       {/* Session Header */}
       <Box paddingX={1} marginTop={1}>
         <SessionHeader

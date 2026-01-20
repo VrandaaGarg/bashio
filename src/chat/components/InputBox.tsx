@@ -202,49 +202,72 @@ export const InputBox = memo(function InputBox({
     filteredCommands.length > 0 ? Math.min(filteredCommands.length, 5) + 2 : 3;
 
   const cursor = '▋';
+  const bgColor = '#1e1e1e';
+
+  const handleMenuHover = (index: number) => {
+    setMenuIndex(index);
+  };
+
+  const handleMenuSelect = (index: number) => {
+    const selected = filteredCommands[index];
+    if (selected) {
+      onSlashCommand(selected.action);
+      setValue('');
+      setCursorPos(0);
+      setMenuIndex(0);
+    }
+  };
 
   return (
-    <Box flexDirection="column" width={width}>
+    <Box flexDirection="column" width={width} backgroundColor={bgColor}>
       {isSlashMode && (
         <Box position="absolute" marginTop={-menuHeight} marginLeft={0}>
           <SlashCommandMenu
             commands={filteredCommands}
             selectedIndex={menuIndex}
             width={width - 2}
+            onHover={handleMenuHover}
+            onSelect={handleMenuSelect}
           />
         </Box>
       )}
-      {/* Input area with border on all sides */}
-      <Box
-        flexDirection="column"
-        marginTop={1}
-        borderStyle="round"
-        borderColor="#eea154ff"
-        backgroundColor="#2a2a2a"
-        paddingX={2}
-        paddingY={1}
-      >
-        {/* Input line */}
-        <Box>
-          {isEmpty && !disabled ? (
-            <Text>
-              <Text color="white">{cursor}</Text>
-              <Text dimColor>{placeholder}</Text>
-            </Text>
-          ) : (
-            <Text
-              color={disabled ? 'gray' : isSlashMode ? '#eea154ff' : 'white'}
-            >
-              {beforeCursor}
-              {!disabled && <Text color="white">{cursor}</Text>}
-              {atCursor !== ' ' && atCursor}
-              {afterCursor.replace(/\n/g, '↵')}
-            </Text>
-          )}
+      {/* Wrapper with background to fill the gap above the border */}
+      <Box flexDirection="column" paddingTop={1} backgroundColor={bgColor}>
+        {/* Input area with border on all sides */}
+        <Box
+          flexDirection="column"
+          borderStyle="round"
+          borderColor="#eea154ff"
+          backgroundColor="#2a2a2a"
+          paddingX={2}
+          paddingY={1}
+        >
+          {/* Input line */}
+          <Box>
+            {isEmpty && !disabled ? (
+              <Text>
+                <Text color="white">{cursor}</Text>
+                <Text dimColor>{placeholder}</Text>
+              </Text>
+            ) : (
+              <Text
+                color={disabled ? 'gray' : isSlashMode ? '#eea154ff' : 'white'}
+              >
+                {beforeCursor}
+                {!disabled && <Text color="white">{cursor}</Text>}
+                {atCursor !== ' ' && atCursor}
+                {afterCursor.replace(/\n/g, '↵')}
+              </Text>
+            )}
+          </Box>
         </Box>
       </Box>
       {/* Footer: Model name on left, shortcuts on right */}
-      <Box justifyContent="space-between" paddingX={1} marginTop={0}>
+      <Box
+        justifyContent="space-between"
+        paddingX={1}
+        backgroundColor={bgColor}
+      >
         <Box>
           <Text color="#eea154ff">◆ </Text>
           <Text color="white">{modelName}</Text>

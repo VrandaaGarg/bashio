@@ -24,6 +24,7 @@ export const WelcomeScreen = memo(function WelcomeScreen({
   children,
 }: WelcomeScreenProps) {
   const lines = BASHIO_ASCII.split('\n');
+  const bgColor = '#1e1e1e';
 
   return (
     <Box
@@ -32,12 +33,13 @@ export const WelcomeScreen = memo(function WelcomeScreen({
       height={height}
       justifyContent="center"
       alignItems="center"
+      backgroundColor={bgColor}
     >
-      <Box flexDirection="column" alignItems="center">
+      <Box flexDirection="column" alignItems="center" backgroundColor={bgColor}>
         {/* Cat Icon */}
         <CatIcon />
         {/* Gap between cat and text */}
-        <Box marginTop={1} />
+        <Box paddingTop={1} backgroundColor={bgColor} />
         {/* BASHIO text */}
         {lines.map((line, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: Static ASCII art lines
@@ -45,8 +47,12 @@ export const WelcomeScreen = memo(function WelcomeScreen({
             {line}
           </Text>
         ))}
-        {/* Input box below ASCII art */}
-        {children && <Box marginTop={2}>{children}</Box>}
+        {/* Input box below ASCII art - use padding for proper background fill */}
+        {children && (
+          <Box paddingTop={2} backgroundColor={bgColor}>
+            {children}
+          </Box>
+        )}
       </Box>
     </Box>
   );

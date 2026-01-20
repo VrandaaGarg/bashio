@@ -1,4 +1,4 @@
-import { useOnWheel } from '@ink-tools/ink-mouse';
+import { useOnClick, useOnWheel } from '@ink-tools/ink-mouse';
 import { highlight } from 'cli-highlight';
 import { Box, type DOMElement, Text, useInput } from 'ink';
 import { ScrollView, type ScrollViewRef } from 'ink-scroll-view';
@@ -15,6 +15,8 @@ import {
   useState,
 } from 'react';
 import type { ChatMessage } from '../../providers/base.js';
+import { copyToClipboard } from '../../utils/clipboard.js';
+import { MessageContextMenu } from './MessageContextMenu.js';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -525,18 +527,33 @@ function parseContent(content: string, maxWidth: number): React.ReactNode[] {
 const Message = memo(function Message({
   message,
   width,
+  messageIndex,
+  onMessageClick,
 }: {
   message: ChatMessage;
   width: number;
+  messageIndex: number;
+  onMessageClick?: (messageIndex: number, content: string) => void;
 }) {
   const isUser = message.role === 'user';
+  const messageRef = useRef<DOMElement>(null);
   const parsedContent = useMemo(
     () => parseContent(message.content, width - 4),
     [message.content, width],
   );
 
+  // Handle click on assistant messages only
+  useOnClick(
+    messageRef,
+    !isUser && onMessageClick
+      ? () => {
+          onMessageClick(messageIndex, message.content);
+        }
+      : null,
+  );
+
   return (
-    <Box flexDirection="column" marginY={1} width={width}>
+    <Box ref={messageRef} flexDirection="column" marginY={1} width={width}>
       <Box>
         <Text bold color={isUser ? '#eea154ff' : 'yellow'}>
           {isUser ? 'You' : 'Bashio'}:
@@ -572,6 +589,32 @@ export const MessageList = memo(
     const scrollRef = useRef<ScrollViewRef>(null);
     const mouseRef = useRef<DOMElement>(null);
     const [followOutput, setFollowOutput] = useState(true);
+    const [contextMenu, setContextMenu] = useState<{
+      messageIndex: number;
+      content: string;
+    } | null>(null);
+
+    const handleMessageClick = useCallback(
+      (messageIndex: number, content: string) => {
+        setContextMenu({ messageIndex, content });
+      },
+      [],
+    );
+
+    const handleContextMenuSelect = useCallback(
+      async (action: string) => {
+        if (action === 'copy' && contextMenu) {
+          // Only copy to clipboard - do NOT execute anything
+          await copyToClipboard(contextMenu.content);
+        }
+        setContextMenu(null);
+      },
+      [contextMenu],
+    );
+
+    const handleContextMenuClose = useCallback(() => {
+      setContextMenu(null);
+    }, []);
 
     const boundedScrollBy = useCallback((delta: number) => {
       const sv = scrollRef.current;
@@ -682,40 +725,68 @@ export const MessageList = memo(
     }
 
     return (
-      <Box ref={mouseRef} height={height} paddingX={1} overflow="hidden">
-        <ScrollView ref={scrollRef} height={height}>
-          {messages.map((msg, i) => (
-            <Message key={`msg-${i}-${msg.role}`} message={msg} width={width} />
-          ))}
+      <Box flexDirection="column" height={height} width={width}>
+        {/* Messages list */}
+        <Box ref={mouseRef} height={height} paddingX={1} overflow="hidden">
+          <ScrollView ref={scrollRef} height={height}>
+            {messages.map((msg, i) => (
+              <Message
+                key={`msg-${i}-${msg.role}`}
+                message={msg}
+                width={width}
+                messageIndex={i}
+                onMessageClick={
+                  contextMenu === null ? handleMessageClick : undefined
+                }
+              />
+            ))}
 
-          {streamingContent && (
-            <Box
-              key="streaming"
-              flexDirection="column"
-              marginY={1}
-              width={width}
-            >
-              <Box>
-                <Text bold color="yellow">
-                  Bashio:
+            {streamingContent && (
+              <Box
+                key="streaming"
+                flexDirection="column"
+                marginY={1}
+                width={width}
+              >
+                <Box>
+                  <Text bold color="yellow">
+                    Bashio:
+                  </Text>
+                </Box>
+                <Box flexDirection="column" paddingLeft={2}>
+                  {streamingContent}
+                  <Text color="yellow">|</Text>
+                </Box>
+              </Box>
+            )}
+
+            {isLoading && !currentResponse && (
+              <Box key="loading" marginY={1}>
+                <Text color="#eea154ff">
+                  <Spinner type="dots" />
                 </Text>
+                <Text color="#eea154ff"> Thinking...</Text>
               </Box>
-              <Box flexDirection="column" paddingLeft={2}>
-                {streamingContent}
-                <Text color="yellow">|</Text>
-              </Box>
-            </Box>
-          )}
+            )}
+          </ScrollView>
+        </Box>
 
-          {isLoading && !currentResponse && (
-            <Box key="loading" marginY={1}>
-              <Text color="#eea154ff">
-                <Spinner type="dots" />
-              </Text>
-              <Text color="#eea154ff"> Thinking...</Text>
-            </Box>
-          )}
-        </ScrollView>
+        {/* Context menu overlay - positioned absolutely on top, centered */}
+        {contextMenu !== null && (
+          <Box
+            position="absolute"
+            width={width}
+            height={height}
+            justifyContent="center"
+            alignItems="center"
+          >
+            <MessageContextMenu
+              onSelect={handleContextMenuSelect}
+              onClose={handleContextMenuClose}
+              width={Math.min(width - 4, 50)}
+            />
+          </Box>
+        )}
       </Box>
     );
   }),

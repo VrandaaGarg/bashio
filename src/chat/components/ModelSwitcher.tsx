@@ -1,5 +1,6 @@
-import { Box, Text, useInput, useStdout } from 'ink';
-import { useState } from 'react';
+import { useOnClick, useOnMouseMove } from '@ink-tools/ink-mouse';
+import { Box, type DOMElement, Text, useInput, useStdout } from 'ink';
+import { memo, useRef, useState } from 'react';
 import type { ConfigV2, ProviderName } from '../../core/types.js';
 import {
   CHATGPT_SUBSCRIPTION_MODELS,
@@ -22,6 +23,41 @@ interface ModelOption {
   model: string;
   label: string;
 }
+
+interface ModelRowProps {
+  option: ModelOption;
+  isSelected: boolean;
+  rowWidth: number;
+  onHover: () => void;
+  onClick: () => void;
+}
+
+const ModelRow = memo(function ModelRow({
+  option,
+  isSelected,
+  rowWidth,
+  onHover,
+  onClick,
+}: ModelRowProps) {
+  const rowRef = useRef<DOMElement>(null);
+
+  useOnMouseMove(rowRef, onHover);
+  useOnClick(rowRef, onClick);
+
+  return (
+    <Box
+      ref={rowRef}
+      backgroundColor={isSelected ? '#eea154ff' : undefined}
+      width={rowWidth}
+      paddingX={1}
+    >
+      <Text color={isSelected ? 'white' : undefined} bold={isSelected}>
+        {isSelected ? ' > ' : '   '}
+        {option.label}
+      </Text>
+    </Box>
+  );
+});
 
 function getModelsForProvider(
   provider: ProviderName,
@@ -71,6 +107,17 @@ export function ModelSwitcher({
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const handleHover = (index: number) => {
+    setSelectedIndex(index);
+  };
+
+  const handleClick = (index: number) => {
+    const selected = options[index];
+    if (selected) {
+      onSelect(selected.provider, selected.model);
+    }
+  };
+
   useInput((input, key) => {
     if (key.escape) {
       onClose();
@@ -103,6 +150,8 @@ export function ModelSwitcher({
   }
   const visibleOptions = options.slice(startIndex, startIndex + visibleCount);
 
+  const bgColor = '#1e1e1e';
+
   return (
     <Box
       flexDirection="column"
@@ -110,6 +159,7 @@ export function ModelSwitcher({
       height={height}
       justifyContent="center"
       alignItems="center"
+      backgroundColor={bgColor}
     >
       <Box
         flexDirection="column"
@@ -131,21 +181,19 @@ export function ModelSwitcher({
         </Box>
 
         {/* Model list */}
-        <Box flexDirection="column" paddingX={2} paddingY={1}>
+        <Box flexDirection="column" paddingY={1}>
           {visibleOptions.map((option, i) => {
             const actualIndex = startIndex + i;
             const isSelected = actualIndex === selectedIndex;
             return (
-              <Box key={`${option.provider}-${option.model}`}>
-                <Text
-                  color={isSelected ? '#eea154ff' : undefined}
-                  bold={isSelected}
-                  inverse={isSelected}
-                >
-                  {isSelected ? ' > ' : '   '}
-                  {option.label}
-                </Text>
-              </Box>
+              <ModelRow
+                key={`${option.provider}-${option.model}`}
+                option={option}
+                isSelected={isSelected}
+                rowWidth={Math.min(66, width - 8)}
+                onHover={() => handleHover(actualIndex)}
+                onClick={() => handleClick(actualIndex)}
+              />
             );
           })}
         </Box>
