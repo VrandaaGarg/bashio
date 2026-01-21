@@ -5,6 +5,7 @@ import {
   filterCommands,
   type SlashCommandAction,
 } from '../utils/slashCommands.js';
+import { useTheme } from '../utils/ThemeContext.js';
 import { SlashCommandMenu } from './SlashCommandMenu.js';
 
 interface InputBoxProps {
@@ -202,59 +203,96 @@ export const InputBox = memo(function InputBox({
     filteredCommands.length > 0 ? Math.min(filteredCommands.length, 5) + 2 : 3;
 
   const cursor = '▋';
+  const theme = useTheme();
+
+  const handleMenuHover = (index: number) => {
+    setMenuIndex(index);
+  };
+
+  const handleMenuSelect = (index: number) => {
+    const selected = filteredCommands[index];
+    if (selected) {
+      onSlashCommand(selected.action);
+      setValue('');
+      setCursorPos(0);
+      setMenuIndex(0);
+    }
+  };
 
   return (
-    <Box flexDirection="column" width={width}>
+    <Box
+      flexDirection="column"
+      width={width}
+      backgroundColor={theme.background}
+    >
       {isSlashMode && (
         <Box position="absolute" marginTop={-menuHeight} marginLeft={0}>
           <SlashCommandMenu
             commands={filteredCommands}
             selectedIndex={menuIndex}
             width={width - 2}
+            onHover={handleMenuHover}
+            onSelect={handleMenuSelect}
           />
         </Box>
       )}
-      {/* Input area with border on all sides */}
+      {/* Wrapper with background to fill the gap above the border */}
       <Box
         flexDirection="column"
-        marginTop={1}
-        borderStyle="round"
-        borderColor="#eea154ff"
-        backgroundColor="#2a2a2a"
-        paddingX={2}
-        paddingY={1}
+        paddingTop={1}
+        backgroundColor={theme.background}
       >
-        {/* Input line */}
-        <Box>
-          {isEmpty && !disabled ? (
-            <Text>
-              <Text color="white">{cursor}</Text>
-              <Text dimColor>{placeholder}</Text>
-            </Text>
-          ) : (
-            <Text
-              color={disabled ? 'gray' : isSlashMode ? '#eea154ff' : 'white'}
-            >
-              {beforeCursor}
-              {!disabled && <Text color="white">{cursor}</Text>}
-              {atCursor !== ' ' && atCursor}
-              {afterCursor.replace(/\n/g, '↵')}
-            </Text>
-          )}
+        {/* Input area with border on all sides */}
+        <Box
+          flexDirection="column"
+          borderStyle="round"
+          borderColor={theme.accent}
+          backgroundColor={theme.secondaryBg}
+          paddingX={2}
+          paddingY={1}
+        >
+          {/* Input line */}
+          <Box>
+            {isEmpty && !disabled ? (
+              <Text>
+                <Text color={theme.textPrimary}>{cursor}</Text>
+                <Text dimColor>{placeholder}</Text>
+              </Text>
+            ) : (
+              <Text
+                color={
+                  disabled
+                    ? 'gray'
+                    : isSlashMode
+                      ? theme.accent
+                      : theme.textPrimary
+                }
+              >
+                {beforeCursor}
+                {!disabled && <Text color={theme.textPrimary}>{cursor}</Text>}
+                {atCursor !== ' ' && atCursor}
+                {afterCursor.replace(/\n/g, '↵')}
+              </Text>
+            )}
+          </Box>
         </Box>
       </Box>
       {/* Footer: Model name on left, shortcuts on right */}
-      <Box justifyContent="space-between" paddingX={1} marginTop={0}>
+      <Box
+        justifyContent="space-between"
+        paddingX={1}
+        backgroundColor={theme.background}
+      >
         <Box>
-          <Text color="#eea154ff">◆ </Text>
-          <Text color="white">{modelName}</Text>
+          <Text color={theme.accent}>◆ </Text>
+          <Text color={theme.textPrimary}>{modelName}</Text>
         </Box>
         <Box>
-          <Text color="white" bold>
+          <Text color={theme.textPrimary} bold>
             /
           </Text>
           <Text dimColor> commands </Text>
-          <Text color="white" bold>
+          <Text color={theme.textPrimary} bold>
             ctrl+c
           </Text>
           <Text dimColor> exit</Text>

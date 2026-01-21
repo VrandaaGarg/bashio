@@ -1,6 +1,6 @@
 import { Command } from 'clipanion';
 import { runAuthSetup } from '../../core/auth.js';
-import { orange } from '../../utils/colors.js';
+import { accent } from '../../utils/colors.js';
 
 export class AuthCommand extends Command {
   static paths = [['auth'], ['--auth']];
@@ -15,8 +15,8 @@ export class AuthCommand extends Command {
 
     if (success) {
       console.log(
-        orange("You're all set! Try:"),
-        orange('b find all png files'),
+        accent("You're all set! Try:"),
+        accent('b find all png files'),
       );
       console.log();
     }

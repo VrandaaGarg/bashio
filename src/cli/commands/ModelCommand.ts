@@ -14,8 +14,8 @@ import {
   OPENAI_MODELS,
   OPENROUTER_MODELS,
 } from '../../providers/index.js';
-import { orange } from '../../utils/colors.js';
-import { bashioTheme } from '../../utils/inquirerTheme.js';
+import { accent } from '../../utils/colors.js';
+import { getBashioTheme } from '../../utils/inquirerTheme.js';
 import { logger } from '../../utils/logger.js';
 import { createSpinner } from '../../utils/spinner.js';
 
@@ -144,7 +144,7 @@ export class ModelCommand extends Command {
       const providerChoices = configuredProviders.map((p) => {
         const settings = config.providers[p];
         const isActive = p === config.activeProvider;
-        const marker = isActive ? orange('●') : pc.dim('○');
+        const marker = isActive ? accent('●') : pc.dim('○');
         const name = `${marker} ${PROVIDER_DISPLAY_NAMES[p]}`;
         const description = settings?.model || 'Not configured';
         return { value: p, name, description };
@@ -162,7 +162,7 @@ export class ModelCommand extends Command {
       >({
         message: 'Select provider:',
         choices: providerChoices,
-        theme: bashioTheme,
+        theme: getBashioTheme(),
       });
 
       if (selectedProvider === '__add_new__') {
@@ -194,7 +194,7 @@ export class ModelCommand extends Command {
           message: 'Select model:',
           choices: availableModels.map((m) => ({ value: m, name: m })),
           default: currentModel,
-          theme: bashioTheme,
+          theme: getBashioTheme(),
         });
       } else {
         const models = getModelsForProvider(selectedProvider);
@@ -202,7 +202,7 @@ export class ModelCommand extends Command {
           message: 'Select model:',
           choices: models.map((m) => ({ value: m.value, name: m.label })),
           default: currentModel,
-          theme: bashioTheme,
+          theme: getBashioTheme(),
         });
       }
 

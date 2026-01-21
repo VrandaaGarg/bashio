@@ -1,17 +1,17 @@
 import ora, { type Ora } from 'ora';
-import { orange } from './colors.js';
-
-// Custom spinner with orange-colored frames
-const orangeSpinner = {
-  interval: 80,
-  frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'].map((f) =>
-    orange(f),
-  ),
-};
+import { accent } from './colors.js';
 
 export function createSpinner(text: string): Ora {
+  const accentColor = accent;
+  const themedSpinner = {
+    interval: 80,
+    frames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'].map((f) =>
+      accentColor(f),
+    ),
+  };
+
   return ora({
-    text: orange(text),
-    spinner: orangeSpinner,
+    text: accentColor(text),
+    spinner: themedSpinner,
   });
 }

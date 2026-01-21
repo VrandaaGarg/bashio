@@ -136,6 +136,14 @@ export class CopilotProvider implements AIProvider {
           'Access forbidden. Please ensure you have an active GitHub Copilot subscription.',
         );
       }
+      if (
+        response.status === 400 &&
+        errorText.includes('model_not_supported')
+      ) {
+        throw new Error(
+          `Model not supported by your Copilot subscription.\n\nTo enable this model, visit:\nhttps://github.com/settings/copilot\n\nThen go to "Models" section and enable the model you want to use and restart the chat using b --chat`,
+        );
+      }
       throw new Error(`Copilot API error: ${response.status} - ${errorText}`);
     }
 
@@ -251,6 +259,14 @@ export class CopilotProvider implements AIProvider {
 
     if (!response.ok) {
       const errorText = await response.text();
+      if (
+        response.status === 400 &&
+        errorText.includes('model_not_supported')
+      ) {
+        throw new Error(
+          `Model not supported by your Copilot subscription.\n\nTo enable this model, visit:\nhttps://github.com/settings/copilot\n\nThen go to "Models" section and enable the model you want to use.`,
+        );
+      }
       throw new Error(`Copilot API error: ${response.status} - ${errorText}`);
     }
 

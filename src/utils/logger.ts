@@ -1,14 +1,14 @@
 import pc from 'picocolors';
-import { orange } from './colors.js';
+import { accent } from './colors.js';
 
 export const logger = {
   info: (msg: string) => console.log(pc.blue('i'), msg),
-  success: (msg: string) => console.log(orange('✓'), msg),
-  warn: (msg: string) => console.log(orange('⚠'), msg),
+  success: (msg: string) => console.log(accent('✓'), msg),
+  warn: (msg: string) => console.log(accent('⚠'), msg),
   error: (msg: string) => console.log(pc.red('✗'), msg),
 
   command: (cmd: string) => {
-    console.log(pc.gray('>'), orange('Will run:'), pc.white(cmd));
+    console.log(pc.gray('>'), accent('Will run:'), pc.white(cmd));
   },
 
   output: (text: string) => {
@@ -19,7 +19,7 @@ export const logger = {
 
   exitCode: (code: number) => {
     if (code === 0) {
-      console.log(orange('✓'), pc.gray(`Done (exit code: ${code})`));
+      console.log(accent('✓'), pc.gray(`Done (exit code: ${code})`));
     } else {
       console.log(pc.red('✗'), pc.gray(`Failed (exit code: ${code})`));
     }

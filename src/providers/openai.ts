@@ -1,3 +1,8 @@
+import {
+  createHttpError,
+  createNetworkError,
+  isFetchError,
+} from '../core/errors.js';
 import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
 import {
   SYSTEM_PROMPT_CHAT,
@@ -38,22 +43,35 @@ export class OpenAIProvider implements AIProvider {
       { role: 'user', content: userMessage },
     ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_tokens: 1024,
-        messages,
-      }),
-    });
+    let response: Response;
+    try {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 1024,
+          messages,
+        }),
+      });
+    } catch (error) {
+      if (isFetchError(error)) {
+        throw createNetworkError(error, 'OpenAI');
+      }
+      throw error;
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      throw createHttpError({
+        provider: 'OpenAI',
+        model: this.model,
+        status: response.status,
+        errorText,
+      });
     }
 
     const data = (await response.json()) as OpenAIResponse;
@@ -99,27 +117,40 @@ export class OpenAIProvider implements AIProvider {
     onChunk: (chunk: string) => void,
     signal?: AbortSignal,
   ): Promise<void> {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: this.model,
-        max_tokens: 4096,
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT_CHAT },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
-        ],
-        stream: true,
-      }),
-      signal,
-    });
+    let response: Response;
+    try {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: this.model,
+          max_tokens: 4096,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT_CHAT },
+            ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ],
+          stream: true,
+        }),
+        signal,
+      });
+    } catch (error) {
+      if (isFetchError(error)) {
+        throw createNetworkError(error, 'OpenAI');
+      }
+      throw error;
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      throw createHttpError({
+        provider: 'OpenAI',
+        model: this.model,
+        status: response.status,
+        errorText,
+      });
     }
 
     const reader = response.body?.getReader();

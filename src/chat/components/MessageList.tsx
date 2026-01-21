@@ -1,6 +1,5 @@
-import { useOnWheel } from '@ink-tools/ink-mouse';
 import { highlight } from 'cli-highlight';
-import { Box, type DOMElement, Text, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { ScrollView, type ScrollViewRef } from 'ink-scroll-view';
 import Spinner from 'ink-spinner';
 import type React from 'react';
@@ -15,6 +14,7 @@ import {
   useState,
 } from 'react';
 import type { ChatMessage } from '../../providers/base.js';
+import { useTheme } from '../utils/ThemeContext.js';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -525,9 +525,11 @@ function parseContent(content: string, maxWidth: number): React.ReactNode[] {
 const Message = memo(function Message({
   message,
   width,
+  accent,
 }: {
   message: ChatMessage;
   width: number;
+  accent: string;
 }) {
   const isUser = message.role === 'user';
   const parsedContent = useMemo(
@@ -538,7 +540,7 @@ const Message = memo(function Message({
   return (
     <Box flexDirection="column" marginY={1} width={width}>
       <Box>
-        <Text bold color={isUser ? '#eea154ff' : 'yellow'}>
+        <Text bold color={isUser ? accent : 'yellow'}>
           {isUser ? 'You' : 'Bashio'}:
         </Text>
       </Box>
@@ -569,8 +571,8 @@ export const MessageList = memo(
     { messages, currentResponse, isLoading, height, width, slashModeRef },
     ref,
   ) {
+    const theme = useTheme();
     const scrollRef = useRef<ScrollViewRef>(null);
-    const mouseRef = useRef<DOMElement>(null);
     const [followOutput, setFollowOutput] = useState(true);
 
     const boundedScrollBy = useCallback((delta: number) => {
@@ -652,15 +654,6 @@ export const MessageList = memo(
       if (input === 'j' && key.meta) boundedScrollBy(3);
     });
 
-    // Mouse wheel scrolling
-    useOnWheel(mouseRef, (event) => {
-      if (event.button === 'wheel-up') {
-        boundedScrollBy(-3);
-      } else if (event.button === 'wheel-down') {
-        boundedScrollBy(3);
-      }
-    });
-
     useEffect(() => {
       if (followOutput) return;
       const sv = scrollRef.current;
@@ -682,40 +675,48 @@ export const MessageList = memo(
     }
 
     return (
-      <Box ref={mouseRef} height={height} paddingX={1} overflow="hidden">
-        <ScrollView ref={scrollRef} height={height}>
-          {messages.map((msg, i) => (
-            <Message key={`msg-${i}-${msg.role}`} message={msg} width={width} />
-          ))}
+      <Box flexDirection="column" height={height} width={width}>
+        {/* Messages list */}
+        <Box height={height} paddingX={1} overflow="hidden">
+          <ScrollView ref={scrollRef} height={height}>
+            {messages.map((msg, i) => (
+              <Message
+                key={`msg-${i}-${msg.role}`}
+                message={msg}
+                width={width}
+                accent={theme.accent}
+              />
+            ))}
 
-          {streamingContent && (
-            <Box
-              key="streaming"
-              flexDirection="column"
-              marginY={1}
-              width={width}
-            >
-              <Box>
-                <Text bold color="yellow">
-                  Bashio:
+            {streamingContent && (
+              <Box
+                key="streaming"
+                flexDirection="column"
+                marginY={1}
+                width={width}
+              >
+                <Box>
+                  <Text bold color="yellow">
+                    Bashio:
+                  </Text>
+                </Box>
+                <Box flexDirection="column" paddingLeft={2}>
+                  {streamingContent}
+                  <Text color="yellow">|</Text>
+                </Box>
+              </Box>
+            )}
+
+            {isLoading && !currentResponse && (
+              <Box key="loading" marginY={1}>
+                <Text color={theme.accent}>
+                  <Spinner type="dots" />
                 </Text>
+                <Text color={theme.accent}> Thinking...</Text>
               </Box>
-              <Box flexDirection="column" paddingLeft={2}>
-                {streamingContent}
-                <Text color="yellow">|</Text>
-              </Box>
-            </Box>
-          )}
-
-          {isLoading && !currentResponse && (
-            <Box key="loading" marginY={1}>
-              <Text color="#eea154ff">
-                <Spinner type="dots" />
-              </Text>
-              <Text color="#eea154ff"> Thinking...</Text>
-            </Box>
-          )}
-        </ScrollView>
+            )}
+          </ScrollView>
+        </Box>
       </Box>
     );
   }),

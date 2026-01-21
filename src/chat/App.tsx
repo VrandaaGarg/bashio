@@ -1,8 +1,8 @@
 import { MouseProvider } from '@ink-tools/ink-mouse';
 import { Box, render, Text, useApp, useInput, useStdout } from 'ink';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { runAuthSetup } from '../core/auth.js';
-import { configExists, loadConfig } from '../core/config.js';
+import { configExists, loadConfig, saveConfig } from '../core/config.js';
 import type { ConfigV2, ProviderName } from '../core/types.js';
 import type { AIProvider, ChatMessage } from '../providers/base.js';
 import { createProvider } from '../providers/index.js';
@@ -14,6 +14,7 @@ import {
 import { ModelSwitcher } from './components/ModelSwitcher.js';
 import { SessionHeader } from './components/SessionHeader.js';
 import { SessionPicker } from './components/SessionPicker.js';
+import { ThemePicker } from './components/ThemePicker.js';
 import { WelcomeScreen } from './components/WelcomeScreen.js';
 import {
   createSession,
@@ -23,6 +24,8 @@ import {
 } from './utils/sessions.js';
 import type { SlashCommandAction } from './utils/slashCommands.js';
 import { createSyncOutputStream } from './utils/syncOutput.js';
+import { ThemeProvider } from './utils/ThemeContext.js';
+import { getThemeByName } from './utils/themes.js';
 
 export type { ChatMessage };
 
@@ -32,6 +35,7 @@ interface AppState {
   currentResponse: string;
   showModelSwitcher: boolean;
   showSessionPicker: boolean;
+  showThemePicker: boolean;
   error: string | null;
 }
 
@@ -52,6 +56,7 @@ function ChatApp() {
     currentResponse: '',
     showModelSwitcher: false,
     showSessionPicker: false,
+    showThemePicker: false,
     error: null,
   });
 
@@ -101,20 +106,51 @@ function ChatApp() {
     }
   }, [messagesLength, isLoading]);
 
+  const noPickerOpen =
+    !state.showModelSwitcher &&
+    !state.showSessionPicker &&
+    !state.showThemePicker;
+
   const handleGlobalInput = useCallback(
     (input: string, key: { ctrl: boolean; escape: boolean }) => {
       if (key.ctrl && input === 'c') {
         exit();
       }
-      if (!slashModeRef.current) {
-        if ((key.ctrl && input === 'm') || (key.ctrl && input === 'p')) {
-          if (!state.showModelSwitcher && !state.showSessionPicker) {
-            setState((s) => ({ ...s, showModelSwitcher: true }));
-          }
+      if (!slashModeRef.current && noPickerOpen && !state.isLoading) {
+        if (key.ctrl && input === 'p') {
+          setState((s) => ({ ...s, showModelSwitcher: true }));
         }
         if (key.ctrl && input === 'o') {
-          if (!state.showModelSwitcher && !state.showSessionPicker) {
-            setState((s) => ({ ...s, showSessionPicker: true }));
+          setState((s) => ({ ...s, showSessionPicker: true }));
+        }
+        if (key.ctrl && input === 't') {
+          setState((s) => ({ ...s, showThemePicker: true }));
+        }
+        if (key.ctrl && input === 'n') {
+          // New session - handled via handleSessionSelect(null) equivalent
+          if (config) {
+            const activeProvider = config.activeProvider;
+            const model = config.providers[activeProvider]?.model ?? 'unknown';
+            const session = createSession(model, activeProvider);
+            setCurrentSession(session);
+            setState((s) => ({
+              ...s,
+              messages: [],
+              error: null,
+            }));
+          }
+        }
+        if (key.ctrl && input === 'l') {
+          // Clear chat
+          setState((s) => ({ ...s, messages: [], error: null }));
+          if (currentSession) {
+            const clearedSession: Session = {
+              ...currentSession,
+              messages: [],
+              messageCount: 0,
+            };
+            saveSession(clearedSession);
+            setCurrentSession(clearedSession);
           }
         }
       }
@@ -125,9 +161,21 @@ function ChatApp() {
         if (state.showSessionPicker) {
           setState((s) => ({ ...s, showSessionPicker: false }));
         }
+        if (state.showThemePicker) {
+          setState((s) => ({ ...s, showThemePicker: false }));
+        }
       }
     },
-    [exit, state.showModelSwitcher, state.showSessionPicker],
+    [
+      exit,
+      noPickerOpen,
+      state.showModelSwitcher,
+      state.showSessionPicker,
+      state.showThemePicker,
+      state.isLoading,
+      config,
+      currentSession,
+    ],
   );
 
   useInput(handleGlobalInput);
@@ -261,6 +309,32 @@ function ChatApp() {
     setState((s) => ({ ...s, showSessionPicker: false }));
   }, []);
 
+  const handleThemeSelect = useCallback(
+    (themeName: string) => {
+      if (!config) return;
+      const cs = config.settings;
+      const newConfig: ConfigV2 = {
+        ...config,
+        settings: {
+          confirmBeforeExecute: cs?.confirmBeforeExecute ?? true,
+          historyEnabled: cs?.historyEnabled ?? true,
+          historyRetentionDays: cs?.historyRetentionDays ?? 30,
+          historyMaxEntries: cs?.historyMaxEntries ?? 2000,
+          autoConfirmShortcuts: cs?.autoConfirmShortcuts ?? false,
+          theme: themeName,
+        },
+      };
+      setConfig(newConfig);
+      saveConfig(newConfig);
+      setState((s) => ({ ...s, showThemePicker: false }));
+    },
+    [config],
+  );
+
+  const handleThemePickerClose = useCallback(() => {
+    setState((s) => ({ ...s, showThemePicker: false }));
+  }, []);
+
   const handleSlashCommand = useCallback(
     (action: SlashCommandAction) => {
       switch (action) {
@@ -269,6 +343,9 @@ function ChatApp() {
           break;
         case 'openSessionPicker':
           setState((s) => ({ ...s, showSessionPicker: true }));
+          break;
+        case 'openThemePicker':
+          setState((s) => ({ ...s, showThemePicker: true }));
           break;
         case 'newSession':
           handleSessionSelect(null);
@@ -293,6 +370,12 @@ function ChatApp() {
     [handleSessionSelect, currentSession, exit],
   );
 
+  const currentThemeName = config?.settings?.theme ?? 'bashio';
+  const theme = useMemo(
+    () => getThemeByName(currentThemeName),
+    [currentThemeName],
+  );
+
   if (!config || !provider) {
     return (
       <Box
@@ -306,22 +389,36 @@ function ChatApp() {
     );
   }
 
+  if (state.showThemePicker) {
+    return (
+      <ThemePicker
+        currentTheme={currentThemeName}
+        onSelect={handleThemeSelect}
+        onClose={handleThemePickerClose}
+      />
+    );
+  }
+
   if (state.showSessionPicker) {
     return (
-      <SessionPicker
-        onSelect={handleSessionSelect}
-        onClose={handleSessionPickerClose}
-      />
+      <ThemeProvider value={theme}>
+        <SessionPicker
+          onSelect={handleSessionSelect}
+          onClose={handleSessionPickerClose}
+        />
+      </ThemeProvider>
     );
   }
 
   if (state.showModelSwitcher) {
     return (
-      <ModelSwitcher
-        config={config}
-        onSelect={handleModelSelect}
-        onClose={handleModelSwitcherClose}
-      />
+      <ThemeProvider value={theme}>
+        <ModelSwitcher
+          config={config}
+          onSelect={handleModelSelect}
+          onClose={handleModelSwitcherClose}
+        />
+      </ThemeProvider>
     );
   }
 
@@ -332,19 +429,26 @@ function ChatApp() {
   // Welcome screen layout (centered)
   if (isEmptyChat) {
     return (
-      <Box flexDirection="column" width={width} height={height}>
-        <WelcomeScreen width={width} height={height}>
-          <InputBox
-            onSubmit={handleSubmit}
-            onSlashCommand={handleSlashCommand}
-            slashModeRef={slashModeRef}
-            modelName={currentModel}
-            disabled={state.isLoading}
-            width={Math.min(width - 4, 80)}
-            placeholder="Ask anything..."
-          />
-        </WelcomeScreen>
-      </Box>
+      <ThemeProvider value={theme}>
+        <Box
+          flexDirection="column"
+          width={width}
+          height={height}
+          backgroundColor={theme.background}
+        >
+          <WelcomeScreen width={width} height={height}>
+            <InputBox
+              onSubmit={handleSubmit}
+              onSlashCommand={handleSlashCommand}
+              slashModeRef={slashModeRef}
+              modelName={currentModel}
+              disabled={state.isLoading}
+              width={Math.min(width - 4, 80)}
+              placeholder="Ask anything..."
+            />
+          </WelcomeScreen>
+        </Box>
+      </ThemeProvider>
     );
   }
 
@@ -357,47 +461,54 @@ function ChatApp() {
   );
 
   return (
-    <Box flexDirection="column" width={width} height={height}>
-      {/* Session Header */}
-      <Box paddingX={1} marginTop={1}>
-        <SessionHeader
-          sessionTitle={currentSession?.title ?? 'New Chat'}
-          width={width - 2}
-        />
-      </Box>
-
-      {/* Message List */}
-      <Box flexDirection="column" height={messageListHeight}>
-        <MessageList
-          ref={messageListRef}
-          messages={state.messages}
-          currentResponse={state.currentResponse}
-          isLoading={state.isLoading}
-          height={messageListHeight}
-          width={width - 2}
-          slashModeRef={slashModeRef}
-        />
-      </Box>
-
-      {/* Error display */}
-      {state.error && (
-        <Box paddingX={1}>
-          <Text color="red">Error: {state.error}</Text>
+    <ThemeProvider value={theme}>
+      <Box
+        flexDirection="column"
+        width={width}
+        height={height}
+        backgroundColor={theme.background}
+      >
+        {/* Session Header */}
+        <Box paddingX={1} marginTop={1}>
+          <SessionHeader
+            sessionTitle={currentSession?.title ?? 'New Chat'}
+            width={width - 2}
+          />
         </Box>
-      )}
 
-      {/* Input Box */}
-      <Box paddingX={1}>
-        <InputBox
-          onSubmit={handleSubmit}
-          onSlashCommand={handleSlashCommand}
-          slashModeRef={slashModeRef}
-          modelName={currentModel}
-          disabled={state.isLoading}
-          width={width - 2}
-        />
+        {/* Message List */}
+        <Box flexDirection="column" height={messageListHeight}>
+          <MessageList
+            ref={messageListRef}
+            messages={state.messages}
+            currentResponse={state.currentResponse}
+            isLoading={state.isLoading}
+            height={messageListHeight}
+            width={width - 2}
+            slashModeRef={slashModeRef}
+          />
+        </Box>
+
+        {/* Error display */}
+        {state.error && (
+          <Box paddingX={1}>
+            <Text color="red">Error: {state.error}</Text>
+          </Box>
+        )}
+
+        {/* Input Box */}
+        <Box paddingX={1}>
+          <InputBox
+            onSubmit={handleSubmit}
+            onSlashCommand={handleSlashCommand}
+            slashModeRef={slashModeRef}
+            modelName={currentModel}
+            disabled={state.isLoading}
+            width={width - 2}
+          />
+        </Box>
       </Box>
-    </Box>
+    </ThemeProvider>
   );
 }
 
@@ -420,7 +531,7 @@ export async function runChat(): Promise<number> {
   process.stdout.write('\x1b[2J\x1b[H');
 
   const instance = render(
-    <MouseProvider>
+    <MouseProvider autoEnable={false}>
       <ChatApp />
     </MouseProvider>,
     {

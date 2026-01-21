@@ -1,3 +1,8 @@
+import {
+  createHttpError,
+  createNetworkError,
+  isFetchError,
+} from '../core/errors.js';
 import type { AIProvider, ChatMessage, ProviderConfig } from './base.js';
 import {
   SYSTEM_PROMPT_CHAT,
@@ -38,9 +43,9 @@ export class OpenRouterProvider implements AIProvider {
       { role: 'user', content: userMessage },
     ];
 
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
+    let response: Response;
+    try {
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -53,12 +58,22 @@ export class OpenRouterProvider implements AIProvider {
           max_tokens: 1024,
           messages,
         }),
-      },
-    );
+      });
+    } catch (error) {
+      if (isFetchError(error)) {
+        throw createNetworkError(error, 'OpenRouter');
+      }
+      throw error;
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      throw createHttpError({
+        provider: 'OpenRouter',
+        model: this.model,
+        status: response.status,
+        errorText,
+      });
     }
 
     const data = (await response.json()) as OpenRouterResponse;
@@ -104,9 +119,9 @@ export class OpenRouterProvider implements AIProvider {
     onChunk: (chunk: string) => void,
     signal?: AbortSignal,
   ): Promise<void> {
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
+    let response: Response;
+    try {
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,12 +139,22 @@ export class OpenRouterProvider implements AIProvider {
           stream: true,
         }),
         signal,
-      },
-    );
+      });
+    } catch (error) {
+      if (isFetchError(error)) {
+        throw createNetworkError(error, 'OpenRouter');
+      }
+      throw error;
+    }
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`OpenRouter API error: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      throw createHttpError({
+        provider: 'OpenRouter',
+        model: this.model,
+        status: response.status,
+        errorText,
+      });
     }
 
     const reader = response.body?.getReader();

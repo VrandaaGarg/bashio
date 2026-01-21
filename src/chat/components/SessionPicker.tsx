@@ -1,13 +1,15 @@
-import { Box, Text, useInput, useStdout } from 'ink';
-import { useState } from 'react';
+import { useOnClick, useOnMouseMove } from '@ink-tools/ink-mouse';
+import { Box, type DOMElement, Text, useInput, useStdout } from 'ink';
+import { memo, useRef, useState } from 'react';
 import {
   deleteSession,
   listSessions,
   type SessionMeta,
 } from '../utils/sessions.js';
+import { useTheme } from '../utils/ThemeContext.js';
 
 interface SessionPickerProps {
-  onSelect: (sessionId: string | null) => void; // null means new session
+  onSelect: (sessionId: string | null) => void;
   onClose: () => void;
 }
 
@@ -27,6 +29,80 @@ function formatDate(isoString: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
+interface SessionRowProps {
+  isNew?: boolean;
+  session?: SessionMeta;
+  isSelected: boolean;
+  rowWidth: number;
+  titleWidth: number;
+  index: number;
+  accent: string;
+  onHover: (index: number) => void;
+  onClick: (index: number) => void;
+}
+
+const SessionRow = memo(function SessionRow({
+  isNew,
+  session,
+  isSelected,
+  rowWidth,
+  titleWidth,
+  index,
+  accent,
+  onHover,
+  onClick,
+}: SessionRowProps) {
+  const rowRef = useRef<DOMElement>(null);
+
+  useOnMouseMove(rowRef, () => {
+    onHover(index);
+  });
+
+  useOnClick(rowRef, () => {
+    onClick(index);
+  });
+
+  if (isNew) {
+    return (
+      <Box
+        ref={rowRef}
+        backgroundColor={isSelected ? accent : undefined}
+        width={rowWidth}
+        paddingX={1}
+      >
+        <Text color={isSelected ? 'white' : 'green'} bold={isSelected}>
+          {isSelected ? ' > ' : '   '}+ New Chat
+        </Text>
+      </Box>
+    );
+  }
+
+  if (!session) return null;
+
+  const title =
+    session.title.length > titleWidth
+      ? `${session.title.slice(0, titleWidth - 3)}...`
+      : session.title.padEnd(titleWidth);
+
+  return (
+    <Box
+      ref={rowRef}
+      backgroundColor={isSelected ? accent : undefined}
+      width={rowWidth}
+      paddingX={1}
+    >
+      <Text color={isSelected ? 'white' : undefined} bold={isSelected}>
+        {isSelected ? ' > ' : '   '}
+        {title}
+      </Text>
+      <Text color={isSelected ? 'white' : undefined} dimColor={!isSelected}>
+        {' '}
+        {session.messageCount} msgs | {formatDate(session.updatedAt)}
+      </Text>
+    </Box>
+  );
+});
+
 export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
   const { stdout } = useStdout();
   const width = stdout?.columns ?? 80;
@@ -35,8 +111,26 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
   const [sessions, setSessions] = useState<SessionMeta[]>(() => listSessions());
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // +1 for "New Chat" option at the top
   const totalItems = sessions.length + 1;
+
+  const handleSelect = (index: number) => {
+    if (index === 0) {
+      onSelect(null);
+    } else {
+      const session = sessions[index - 1];
+      if (session) {
+        onSelect(session.id);
+      }
+    }
+  };
+
+  const handleHover = (index: number) => {
+    setSelectedIndex(index);
+  };
+
+  const handleClick = (index: number) => {
+    handleSelect(index);
+  };
 
   useInput((input, key) => {
     if (key.escape) {
@@ -45,14 +139,7 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
     }
 
     if (key.return) {
-      if (selectedIndex === 0) {
-        onSelect(null); // New session
-      } else {
-        const session = sessions[selectedIndex - 1];
-        if (session) {
-          onSelect(session.id);
-        }
-      }
+      handleSelect(selectedIndex);
       return;
     }
 
@@ -64,14 +151,12 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
       setSelectedIndex((i) => Math.min(totalItems - 1, i + 1));
     }
 
-    // Ctrl+D to delete selected session
     if (key.ctrl && input === 'd') {
       if (selectedIndex > 0) {
         const session = sessions[selectedIndex - 1];
         if (session) {
           deleteSession(session.id);
           setSessions(listSessions());
-          // Adjust selection if needed
           if (selectedIndex >= sessions.length) {
             setSelectedIndex(Math.max(0, sessions.length - 1));
           }
@@ -97,6 +182,10 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
 
   const visibleItems = allItems.slice(startIndex, startIndex + visibleCount);
 
+  const theme = useTheme();
+  const rowWidth = Math.min(76, width - 6);
+  const titleWidth = Math.min(40, width - 30);
+
   return (
     <Box
       flexDirection="column"
@@ -104,16 +193,17 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
       height={height}
       justifyContent="center"
       alignItems="center"
+      backgroundColor={theme.background}
     >
       <Box
         flexDirection="column"
         width={Math.min(80, width - 4)}
         borderStyle="double"
-        borderColor="#eea154ff"
+        borderColor={theme.accent}
       >
         {/* Header */}
         <Box paddingX={2} paddingY={1} justifyContent="space-between">
-          <Text bold color="#eea154ff">
+          <Text bold color={theme.accent}>
             Chat Sessions
           </Text>
           <Text dimColor>Esc: close | Enter: select | Ctrl+D: delete</Text>
@@ -125,47 +215,39 @@ export function SessionPicker({ onSelect, onClose }: SessionPickerProps) {
         </Box>
 
         {/* Session list */}
-        <Box flexDirection="column" paddingX={2} paddingY={1}>
+        <Box flexDirection="column" paddingX={1} paddingY={1}>
           {visibleItems.map((item, i) => {
             const actualIndex = startIndex + i;
             const isSelected = actualIndex === selectedIndex;
 
             if (item.type === 'new') {
               return (
-                <Box key="new-chat">
-                  <Text
-                    color={isSelected ? '#eea154ff' : 'green'}
-                    bold={isSelected}
-                    inverse={isSelected}
-                  >
-                    {isSelected ? ' > ' : '   '}+ New Chat
-                  </Text>
-                </Box>
+                <SessionRow
+                  key="new-chat"
+                  isNew
+                  isSelected={isSelected}
+                  rowWidth={rowWidth}
+                  titleWidth={titleWidth}
+                  index={actualIndex}
+                  accent={theme.accent}
+                  onHover={handleHover}
+                  onClick={handleClick}
+                />
               );
             }
 
-            const { session } = item;
-            const titleWidth = Math.min(40, width - 30);
-            const title =
-              session.title.length > titleWidth
-                ? `${session.title.slice(0, titleWidth - 3)}...`
-                : session.title.padEnd(titleWidth);
-
             return (
-              <Box key={session.id}>
-                <Text
-                  color={isSelected ? '#eea154ff' : undefined}
-                  bold={isSelected}
-                  inverse={isSelected}
-                >
-                  {isSelected ? ' > ' : '   '}
-                  {title}
-                </Text>
-                <Text dimColor={!isSelected}>
-                  {' '}
-                  {session.messageCount} msgs | {formatDate(session.updatedAt)}
-                </Text>
-              </Box>
+              <SessionRow
+                key={item.session.id}
+                session={item.session}
+                isSelected={isSelected}
+                rowWidth={rowWidth}
+                titleWidth={titleWidth}
+                index={actualIndex}
+                accent={theme.accent}
+                onHover={handleHover}
+                onClick={handleClick}
+              />
             );
           })}
 
