@@ -16,10 +16,10 @@ export const SessionHeader = memo(function SessionHeader({
   return (
     <Box
       borderStyle="single"
-      borderLeft
+      borderLeft={false}
       borderRight={false}
       borderTop={false}
-      borderBottom={false}
+      borderBottom
       borderColor={theme.accent}
       backgroundColor={theme.secondaryBg}
       paddingX={1}

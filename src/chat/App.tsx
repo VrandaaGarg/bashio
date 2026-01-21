@@ -531,7 +531,7 @@ export async function runChat(): Promise<number> {
   process.stdout.write('\x1b[2J\x1b[H');
 
   const instance = render(
-    <MouseProvider>
+    <MouseProvider autoEnable={false}>
       <ChatApp />
     </MouseProvider>,
     {

@@ -1,6 +1,5 @@
-import { useOnClick, useOnWheel } from '@ink-tools/ink-mouse';
 import { highlight } from 'cli-highlight';
-import { Box, type DOMElement, Text, useInput } from 'ink';
+import { Box, Text, useInput } from 'ink';
 import { ScrollView, type ScrollViewRef } from 'ink-scroll-view';
 import Spinner from 'ink-spinner';
 import type React from 'react';
@@ -15,9 +14,7 @@ import {
   useState,
 } from 'react';
 import type { ChatMessage } from '../../providers/base.js';
-import { copyToClipboard } from '../../utils/clipboard.js';
 import { useTheme } from '../utils/ThemeContext.js';
-import { MessageContextMenu } from './MessageContextMenu.js';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -528,35 +525,20 @@ function parseContent(content: string, maxWidth: number): React.ReactNode[] {
 const Message = memo(function Message({
   message,
   width,
-  messageIndex,
   accent,
-  onMessageClick,
 }: {
   message: ChatMessage;
   width: number;
-  messageIndex: number;
   accent: string;
-  onMessageClick?: (messageIndex: number, content: string) => void;
 }) {
   const isUser = message.role === 'user';
-  const messageRef = useRef<DOMElement>(null);
   const parsedContent = useMemo(
     () => parseContent(message.content, width - 4),
     [message.content, width],
   );
 
-  // Handle click on assistant messages only
-  useOnClick(
-    messageRef,
-    !isUser && onMessageClick
-      ? () => {
-          onMessageClick(messageIndex, message.content);
-        }
-      : null,
-  );
-
   return (
-    <Box ref={messageRef} flexDirection="column" marginY={1} width={width}>
+    <Box flexDirection="column" marginY={1} width={width}>
       <Box>
         <Text bold color={isUser ? accent : 'yellow'}>
           {isUser ? 'You' : 'Bashio'}:
@@ -591,34 +573,7 @@ export const MessageList = memo(
   ) {
     const theme = useTheme();
     const scrollRef = useRef<ScrollViewRef>(null);
-    const mouseRef = useRef<DOMElement>(null);
     const [followOutput, setFollowOutput] = useState(true);
-    const [contextMenu, setContextMenu] = useState<{
-      messageIndex: number;
-      content: string;
-    } | null>(null);
-
-    const handleMessageClick = useCallback(
-      (messageIndex: number, content: string) => {
-        setContextMenu({ messageIndex, content });
-      },
-      [],
-    );
-
-    const handleContextMenuSelect = useCallback(
-      async (action: string) => {
-        if (action === 'copy' && contextMenu) {
-          // Only copy to clipboard - do NOT execute anything
-          await copyToClipboard(contextMenu.content);
-        }
-        setContextMenu(null);
-      },
-      [contextMenu],
-    );
-
-    const handleContextMenuClose = useCallback(() => {
-      setContextMenu(null);
-    }, []);
 
     const boundedScrollBy = useCallback((delta: number) => {
       const sv = scrollRef.current;
@@ -699,15 +654,6 @@ export const MessageList = memo(
       if (input === 'j' && key.meta) boundedScrollBy(3);
     });
 
-    // Mouse wheel scrolling
-    useOnWheel(mouseRef, (event) => {
-      if (event.button === 'wheel-up') {
-        boundedScrollBy(-3);
-      } else if (event.button === 'wheel-down') {
-        boundedScrollBy(3);
-      }
-    });
-
     useEffect(() => {
       if (followOutput) return;
       const sv = scrollRef.current;
@@ -731,18 +677,14 @@ export const MessageList = memo(
     return (
       <Box flexDirection="column" height={height} width={width}>
         {/* Messages list */}
-        <Box ref={mouseRef} height={height} paddingX={1} overflow="hidden">
+        <Box height={height} paddingX={1} overflow="hidden">
           <ScrollView ref={scrollRef} height={height}>
             {messages.map((msg, i) => (
               <Message
                 key={`msg-${i}-${msg.role}`}
                 message={msg}
                 width={width}
-                messageIndex={i}
                 accent={theme.accent}
-                onMessageClick={
-                  contextMenu === null ? handleMessageClick : undefined
-                }
               />
             ))}
 
@@ -775,23 +717,6 @@ export const MessageList = memo(
             )}
           </ScrollView>
         </Box>
-
-        {/* Context menu overlay - positioned absolutely on top, centered */}
-        {contextMenu !== null && (
-          <Box
-            position="absolute"
-            width={width}
-            height={height}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <MessageContextMenu
-              onSelect={handleContextMenuSelect}
-              onClose={handleContextMenuClose}
-              width={Math.min(width - 4, 50)}
-            />
-          </Box>
-        )}
       </Box>
     );
   }),
