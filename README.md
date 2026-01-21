@@ -1,6 +1,25 @@
-# Bashio
+<!-- SEO / Social sharing meta tags for GitHub -->
+<!-- Title: Bashio - AI-Powered CLI Tool | Natural Language to Shell Commands -->
+<!-- Description: Transform plain English into shell commands instantly. Stop Googling syntax, start doing. Supports Claude, OpenAI, GitHub Copilot, Ollama, and more. -->
+<!-- Keywords: CLI tool, AI terminal, natural language shell, command line AI, bash assistant, shell commands, terminal productivity, developer tools -->
 
-> Natural language to shell commands. Stop Googling, start doing.
+<p align="center">
+  <a href="https://github.com/VrandaaGarg/bashio">
+    <img src="https://res.cloudinary.com/dyetf2h9n/image/upload/v1769016810/Natural_language_to_shell_commands._Stop_Googling_start_doing._1_u8e0qd.png" alt="Bashio - Natural language to shell commands. Stop Googling, start doing." width="100%" />
+  </a>
+</p>
+
+<h1 align="center">Bashio</h1>
+
+<p align="center">
+  <strong>Natural language to shell commands. Stop Googling, start doing.</strong>
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/bashio"><img src="https://img.shields.io/npm/v/bashio.svg" alt="npm version" /></a>
+  <a href="https://github.com/VrandaaGarg/bashio/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License: Apache 2.0" /></a>
+  <a href="https://github.com/VrandaaGarg/bashio"><img src="https://img.shields.io/github/stars/VrandaaGarg/bashio?style=social" alt="GitHub stars" /></a>
+</p>
 
 ```bash
 npm i -g bashio
@@ -285,6 +304,32 @@ b --config
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request on [GitHub](https://github.com/VrandaaGarg/bashio).
+
+---
+
 ## License
 
-MIT
+Copyright 2025 Vranda Garg
+
+### Additional Terms
+
+If you use, modify, or distribute this project or any part of it, you MUST:
+
+1. **Attribution:** Give clear and visible credit to **Vranda Garg** as the original author.
+2. **Link Back:** Include a link to the original repository: [https://github.com/VrandaaGarg/bashio](https://github.com/VrandaaGarg/bashio)
+
+Licensed under the Apache License, Version 2.0. See the [LICENSE](https://github.com/VrandaaGarg/bashio/blob/main/LICENSE) file for details.
+
+---
+
+<p align="center">
+  <a href="https://github.com/VrandaaGarg/bashio">GitHub</a> ·
+  <a href="https://www.npmjs.com/package/bashio">npm</a>
+</p>
+
+<p align="center">
+  <sub>Built with AI for developers who prefer doing over searching.</sub>
+</p>
