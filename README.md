@@ -1,6 +1,3 @@
-<!-- SEO: Bashio - AI CLI Tool | Natural Language to Shell Commands -->
-<!-- Transform plain English into shell commands. Supports Claude, OpenAI, GitHub Copilot, Ollama. -->
-
 <p align="center">
   <a href="https://github.com/VrandaaGarg/bashio">
     <img src="https://res.cloudinary.com/dyetf2h9n/image/upload/v1769023957/Natural_language_to_shell_commands._Stop_Googling_start_doing._1_u8e0qd.png" alt="Bashio" width="100%" />
